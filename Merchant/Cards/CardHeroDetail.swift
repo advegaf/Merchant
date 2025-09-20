@@ -26,25 +26,25 @@ struct CardHeroDetail: View {
                     image
                         .resizable()
                         .aspectRatio(1.6, contentMode: .fit)
-                        .clipShape(RoundedRectangle(cornerRadius: ThemeRadius.card))
+                        .clipShape(RoundedRectangle(cornerRadius: ModernRadius.card))
                 } placeholder: {
-                    RoundedRectangle(cornerRadius: ThemeRadius.card)
+                    RoundedRectangle(cornerRadius: ModernRadius.card)
                         .fill(.ultraThinMaterial)
                         .aspectRatio(1.6, contentMode: .fit)
                         .overlay {
                             ProgressView()
-                                .tint(ThemeColor.primaryNeon)
+                                .tint(ModernColors.accent)
                         }
                 }
                 .matchedGeometryEffect(id: card.id, in: namespace)
                 .frame(maxWidth: 350)
-                .padding(.horizontal, ThemeSpacing.xl)
+                .padding(.horizontal, ModernSpacing.xl)
 
                 ScrollView {
-                    VStack(spacing: ThemeSpacing.xl) {
-                        VStack(spacing: ThemeSpacing.l) {
+                    VStack(spacing: ModernSpacing.xl) {
+                        VStack(spacing: ModernSpacing.lg) {
                             HStack {
-                                VStack(alignment: .leading, spacing: ThemeSpacing.xs) {
+                                VStack(alignment: .leading, spacing: ModernSpacing.xs) {
                                     Text(card.productName)
                                         .font(.title2)
                                         .fontWeight(.bold)
@@ -58,30 +58,30 @@ struct CardHeroDetail: View {
 
                                 Spacer()
 
-                                VStack(alignment: .trailing, spacing: ThemeSpacing.xs) {
+                                VStack(alignment: .trailing, spacing: ModernSpacing.xs) {
                                     Text(card.network)
                                         .font(.caption)
                                         .fontWeight(.medium)
                                         .foregroundStyle(.secondary)
 
                                     if card.isPremium {
-                                        HStack(spacing: ThemeSpacing.xs) {
+                                        HStack(spacing: ModernSpacing.xs) {
                                             Image(systemName: "crown.fill")
                                                 .font(.caption2)
                                             Text("Premium")
                                                 .font(.caption2)
                                                 .fontWeight(.medium)
                                         }
-                                        .foregroundStyle(ThemeColor.premiumGold)
+                                        .foregroundStyle(ModernColors.reward)
                                     }
                                 }
                             }
 
-                            GlassCard {
-                                VStack(alignment: .leading, spacing: ThemeSpacing.l) {
+                            ModernGlassCard(style: .secondary) {
+                                VStack(alignment: .leading, spacing: ModernSpacing.lg) {
                                     HStack {
                                         Image(systemName: "sparkles")
-                                            .foregroundStyle(ThemeColor.rewardAccent)
+                                            .foregroundStyle(ModernColors.reward)
                                         Text("Why here")
                                             .font(.headline)
                                             .foregroundStyle(.primary)
@@ -93,36 +93,36 @@ struct CardHeroDetail: View {
                                         .foregroundStyle(.secondary)
                                         .multilineTextAlignment(.leading)
                                 }
-                                .padding(ThemeSpacing.xl)
+                                .padding(ModernSpacing.xl)
                             }
 
-                            HStack(spacing: ThemeSpacing.l) {
-                                GlassCard {
-                                    VStack(spacing: ThemeSpacing.s) {
+                            HStack(spacing: ModernSpacing.lg) {
+                                ModernGlassCard(style: .secondary) {
+                                    VStack(spacing: ModernSpacing.sm) {
                                         Text("3×")
                                             .font(.title)
                                             .fontWeight(.bold)
-                                            .foregroundStyle(ThemeColor.primaryNeon)
+                                            .foregroundStyle(ModernColors.accent)
 
                                         Text("Dining")
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                     }
-                                    .padding(ThemeSpacing.l)
+                                    .padding(ModernSpacing.lg)
                                 }
 
-                                GlassCard {
-                                    VStack(spacing: ThemeSpacing.s) {
+                                ModernGlassCard(style: .secondary) {
+                                    VStack(spacing: ModernSpacing.sm) {
                                         Text("$327")
                                             .font(.title)
                                             .fontWeight(.bold)
-                                            .foregroundStyle(ThemeColor.rewardAccent)
+                                            .foregroundStyle(ModernColors.reward)
 
                                         Text("This month")
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                     }
-                                    .padding(ThemeSpacing.l)
+                                    .padding(ModernSpacing.lg)
                                 }
                             }
                         }
@@ -136,15 +136,15 @@ struct CardHeroDetail: View {
                                 .font(.headline)
                                 .foregroundStyle(.primary)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, ThemeSpacing.l)
+                                .padding(.vertical, ModernSpacing.lg)
                                 .background {
-                                    GlassCard {
+                                    ModernGlassCard(style: .secondary) {
                                         Color.clear
                                     }
                                 }
                         }
                     }
-                    .padding(ThemeSpacing.xl)
+                    .padding(ModernSpacing.xl)
                 }
             }
         }

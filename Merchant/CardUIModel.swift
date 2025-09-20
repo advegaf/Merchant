@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct CardUI: Identifiable, Equatable {
+struct CardUI: Identifiable, Equatable, Hashable {
     let id: UUID
     let institutionId: String
     let productName: String

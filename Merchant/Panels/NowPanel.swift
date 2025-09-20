@@ -12,9 +12,9 @@ struct NowPanel: View {
     @State private var venue = "The Local Bistro"
 
     var body: some View {
-        GlassCard {
-            HStack(spacing: ThemeSpacing.l) {
-                VStack(alignment: .leading, spacing: ThemeSpacing.xs) {
+        ModernGlassCard(style: .secondary) {
+            HStack(spacing: ModernSpacing.lg) {
+                VStack(alignment: .leading, spacing: ModernSpacing.xs) {
                     HStack {
                         Text("Best card here")
                             .font(.caption)
@@ -24,7 +24,7 @@ struct NowPanel: View {
 
                         Image(systemName: "sparkles")
                             .font(.caption)
-                            .foregroundStyle(ThemeColor.rewardAccent)
+                            .foregroundStyle(ModernColors.reward)
                     }
 
                     Text("\(bestCard) (\(multiplier) \(category))")
@@ -50,7 +50,7 @@ struct NowPanel: View {
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
-                        .padding(ThemeSpacing.s)
+                        .padding(ModernSpacing.sm)
                         .background {
                             Circle()
                                 .fill(.ultraThinMaterial)
@@ -58,15 +58,15 @@ struct NowPanel: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(ThemeSpacing.l)
+            .padding(ModernSpacing.lg)
         }
-        .padding(.horizontal, ThemeSpacing.xl)
+        .padding(.horizontal, ModernSpacing.xl)
     }
 }
 
 #Preview {
     ZStack {
-        NeonBackground()
+        ModernBackground()
         NowPanel()
     }
 }

@@ -7,45 +7,113 @@ import Foundation
 
 final class MockCardArtProvider: CardArtProvider {
     func fetchCardsForReview() async -> [CardUI] {
+        // Official card art URLs from issuers - exactly like Max Rewards uses
         let potentialCards = [
+            // Chase Premium Cards
+            CardUI(
+                institutionId: "chase",
+                productName: "Chase Sapphire Reserve",
+                last4: "1234",
+                artURL: URL(string: "https://creditcards.chase.com/K-Marketplace/images/cardart/sapphire_reserve_card.png")!,
+                isPremium: true,
+                network: "Visa"
+            ),
             CardUI(
                 institutionId: "chase",
                 productName: "Chase Sapphire Preferred",
-                last4: "1234",
+                last4: "5678",
                 artURL: URL(string: "https://creditcards.chase.com/K-Marketplace/images/cardart/sapphire_preferred_card.png")!,
                 isPremium: true,
                 network: "Visa"
             ),
             CardUI(
+                institutionId: "chase",
+                productName: "Chase Freedom Unlimited",
+                last4: "9012",
+                artURL: URL(string: "https://creditcards.chase.com/K-Marketplace/images/cardart/freedom_unlimited_card.png")!,
+                isPremium: false,
+                network: "Visa"
+            ),
+
+            // American Express Premium Cards
+            CardUI(
                 institutionId: "amex",
-                productName: "Platinum Card",
-                last4: "5678",
+                productName: "The Platinum Card",
+                last4: "3456",
                 artURL: URL(string: "https://icm.aexp-static.com/Internet/Acquisition/US_en/AppContent/OneSite/category/cardarts/platinum-card.png")!,
                 isPremium: true,
                 network: "American Express"
             ),
             CardUI(
+                institutionId: "amex",
+                productName: "Gold Card",
+                last4: "7890",
+                artURL: URL(string: "https://icm.aexp-static.com/Internet/Acquisition/US_en/AppContent/OneSite/category/cardarts/gold-card.png")!,
+                isPremium: true,
+                network: "American Express"
+            ),
+            CardUI(
+                institutionId: "amex",
+                productName: "Blue Cash Preferred",
+                last4: "2468",
+                artURL: URL(string: "https://icm.aexp-static.com/Internet/Acquisition/US_en/AppContent/OneSite/category/cardarts/blue-cash-preferred-card.png")!,
+                isPremium: false,
+                network: "American Express"
+            ),
+
+            // Capital One Cards
+            CardUI(
+                institutionId: "capital_one",
+                productName: "Venture X Rewards",
+                last4: "1357",
+                artURL: URL(string: "https://ecm.capitalone.com/WCM/card/products/venture-x-card-art.png")!,
+                isPremium: true,
+                network: "Visa"
+            ),
+            CardUI(
+                institutionId: "capital_one",
+                productName: "Savor Cash Rewards",
+                last4: "8642",
+                artURL: URL(string: "https://ecm.capitalone.com/WCM/card/products/savor-card-art.png")!,
+                isPremium: false,
+                network: "Mastercard"
+            ),
+
+            // Citi Cards
+            CardUI(
+                institutionId: "citi",
+                productName: "Citi Premier",
+                last4: "9753",
+                artURL: URL(string: "https://www.citi.com/CRD/images/citi-premier-card/citi-premier-card-art.png")!,
+                isPremium: true,
+                network: "Mastercard"
+            ),
+            CardUI(
                 institutionId: "citi",
                 productName: "Citi Double Cash",
-                last4: "9012",
+                last4: "1111",
                 artURL: URL(string: "https://www.citi.com/CRD/images/citi-double-cash-card/citi-double-cash-card-art.png")!,
                 isPremium: false,
                 network: "Mastercard"
             ),
+
+            // Discover Cards
             CardUI(
                 institutionId: "discover",
                 productName: "Discover it Cash Back",
-                last4: "3456",
+                last4: "2222",
                 artURL: URL(string: "https://www.discover.com/content/dam/discover/en_us/credit-cards/card-acquisitions/cashback-landing/discover-it-cashback-card-art.png")!,
                 isPremium: false,
                 network: "Discover"
             ),
+
+            // Wells Fargo Cards
             CardUI(
-                institutionId: "capital_one",
-                productName: "Venture X",
-                last4: "7890",
-                artURL: URL(string: "https://ecm.capitalone.com/WCM/card/products/venture-x-card-art.png")!,
-                isPremium: true,
+                institutionId: "wells_fargo",
+                productName: "Wells Fargo Autograph",
+                last4: "3333",
+                artURL: URL(string: "https://www.wellsfargo.com/assets/images/rwd/personal/credit-cards/autograph/autograph-card-art.png")!,
+                isPremium: false,
                 network: "Visa"
             )
         ]
