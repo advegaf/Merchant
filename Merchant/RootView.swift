@@ -14,11 +14,22 @@ struct RootView: View {
                 .sheet(isPresented: .constant(uiState.showAuthSheet)) {
                     AuthSheet()
                 }
-                .sheet(isPresented: .constant(uiState.showPlaidLinkSheet)) {
+                .sheet(
+                    isPresented: Binding(
+                        get: { uiState.showPlaidLinkSheet },
+                        set: { uiState.showPlaidLinkSheet = $0 }
+                    )
+                ) {
                     PlaidLinkSheet()
                 }
-                .sheet(isPresented: .constant(uiState.showReviewCardsSheet)) {
-                    ReviewCardsSheet()
+                .sheet(
+                    isPresented: Binding(
+                        get: { uiState.showCardPicker },
+                        set: { uiState.showCardPicker = $0 }
+                    )
+                ) {
+                    CardPickerSheet()
+                        .environment(SelectedCardsStore.shared)
                 }
         }
     }

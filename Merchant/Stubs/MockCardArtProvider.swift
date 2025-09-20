@@ -116,9 +116,92 @@ final class MockCardArtProvider: CardArtProvider {
                 isPremium: false,
                 network: "Visa"
             )
+            ,
+
+            // Additional popular cards
+            CardUI(
+                institutionId: "chase",
+                productName: "Chase Freedom Flex",
+                last4: "4444",
+                artURL: URL(string: "https://creditcards.chase.com/K-Marketplace/images/cardart/freedom_flex_card.png")!,
+                isPremium: false,
+                network: "Visa"
+            ),
+            CardUI(
+                institutionId: "capital_one",
+                productName: "SavorOne Cash Rewards",
+                last4: "5555",
+                artURL: URL(string: "https://ecm.capitalone.com/WCM/card/products/savorone-card-art.png")!,
+                isPremium: false,
+                network: "Mastercard"
+            ),
+            CardUI(
+                institutionId: "capital_one",
+                productName: "Venture Rewards",
+                last4: "6666",
+                artURL: URL(string: "https://ecm.capitalone.com/WCM/card/products/venture-card-art.png")!,
+                isPremium: false,
+                network: "Visa"
+            ),
+            CardUI(
+                institutionId: "capital_one",
+                productName: "Quicksilver Cash Rewards",
+                last4: "7777",
+                artURL: URL(string: "https://ecm.capitalone.com/WCM/card/products/quicksilver-card-art.png")!,
+                isPremium: false,
+                network: "Visa"
+            ),
+            CardUI(
+                institutionId: "amex",
+                productName: "Green Card",
+                last4: "8888",
+                artURL: URL(string: "https://icm.aexp-static.com/Internet/Acquisition/US_en/AppContent/OneSite/category/cardarts/green-card.png")!,
+                isPremium: false,
+                network: "American Express"
+            ),
+            CardUI(
+                institutionId: "amex",
+                productName: "Blue Cash Everyday",
+                last4: "9999",
+                artURL: URL(string: "https://icm.aexp-static.com/Internet/Acquisition/US_en/AppContent/OneSite/category/cardarts/blue-cash-everyday-card.png")!,
+                isPremium: false,
+                network: "American Express"
+            ),
+            CardUI(
+                institutionId: "citi",
+                productName: "Citi Custom Cash",
+                last4: "1212",
+                artURL: URL(string: "https://www.citi.com/CRD/images/citi-custom-cash-card/citi-custom-cash-card-art.png")!,
+                isPremium: false,
+                network: "Mastercard"
+            ),
+            CardUI(
+                institutionId: "citi",
+                productName: "Citi Rewards+",
+                last4: "1313",
+                artURL: URL(string: "https://www.citi.com/CRD/images/citi-rewards-plus-card/citi-rewards-plus-card-art.png")!,
+                isPremium: false,
+                network: "Mastercard"
+            ),
+            CardUI(
+                institutionId: "discover",
+                productName: "Discover it Miles",
+                last4: "1414",
+                artURL: URL(string: "https://www.discover.com/content/dam/discover/en_us/credit-cards/card-acquisitions/miles-landing/discover-it-miles-card-art.png")!,
+                isPremium: false,
+                network: "Discover"
+            ),
+            CardUI(
+                institutionId: "wells_fargo",
+                productName: "Wells Fargo Active Cash",
+                last4: "1515",
+                artURL: URL(string: "https://www.wellsfargo.com/assets/images/rwd/personal/credit-cards/active-cash/active-cash-card-art.png")!,
+                isPremium: false,
+                network: "Visa"
+            )
         ]
 
-        try? await Task.sleep(for: .milliseconds(800))
+        // Removed artificial delay for instant Manage experience
 
         return await validateCardArt(potentialCards)
     }

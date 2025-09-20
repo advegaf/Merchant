@@ -1,149 +1,109 @@
-// Rules: Mock Plaid connection sheet with loading state, success flow to ReviewCardsSheet
-// Inputs: UIState for sheet management, MockCardArtProvider for cards
-// Outputs: Mock connection UI, populates cardsToReview, triggers review sheet
-// Constraints: UI only mock, realistic loading time, success leads to card review
+// Rules: Plaid Link entry sheet with consent, starts coordinator when ready
+// Inputs: UIState for presentation, PlaidLinkViewModel for actions
+// Outputs: Launch Plaid Link, errors surfaced locally, dismiss on success
+// Constraints: No secrets; tokens via backend; short-lived access tokens in Keychain
 
 import SwiftUI
 
 struct PlaidLinkSheet: View {
     @Environment(UIState.self) private var uiState
     @Environment(\.dismiss) private var dismiss
-    @State private var isConnecting = false
-    @State private var connectionComplete = false
-    @State private var cardProvider = MockCardArtProvider()
+    @State private var viewModel: PlaidLinkViewModel = {
+        let remote = RemoteLinkTokenProvider(baseURL: PlaidAPIConfig.serverBaseURL())
+        #if DEBUG
+        let fallback = DebugDirectPlaidProvider()
+        let provider: LinkTokenProviding? = remote ?? fallback
+        #else
+        let provider: LinkTokenProviding? = remote
+        #endif
+        return PlaidLinkViewModel(linkTokenProvider: provider)
+    }()
+    @State private var isLaunching = false
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: ThemeSpacing.xl) {
-                if connectionComplete {
-                    VStack(spacing: ThemeSpacing.l) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 64))
-                            .foregroundStyle(ThemeColor.primaryNeon)
+            VStack(spacing: ModernSpacing.xl) {
+                Spacer()
 
-                        VStack(spacing: ThemeSpacing.s) {
-                            Text("Connection Successful")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.primary)
+                VStack(spacing: ModernSpacing.xl) {
+                    Image(systemName: "link")
+                        .font(.system(size: 64))
+                        .foregroundStyle(ModernColors.accent)
 
-                            Text("We found your cards and will review them with you")
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
+                    VStack(spacing: ModernSpacing.lg) {
+                        Text("Connect Account")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundStyle(ModernColors.textPrimary)
 
-                        Button("Review Cards") {
-                            dismiss()
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                uiState.showReviewCardsSheet = true
-                            }
-                        }
-                        .font(.headline)
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, ThemeSpacing.l)
-                        .background(ThemeColor.primaryNeon, in: RoundedRectangle(cornerRadius: ThemeRadius.container))
-                    }
-                } else {
-                    Spacer()
-
-                    VStack(spacing: ThemeSpacing.l) {
-                        Image(systemName: "link.circle.fill")
-                            .font(.system(size: 64))
-                            .foregroundStyle(ThemeColor.primaryNeon)
-                            .symbolEffect(.pulse, isActive: isConnecting)
-
-                        VStack(spacing: ThemeSpacing.s) {
-                            Text(isConnecting ? "Connecting..." : "Connect Your Bank")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.primary)
-
-                            Text(isConnecting ? "Securely linking your accounts" : "Link your bank account to find your credit cards automatically")
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
-
-                        if isConnecting {
-                            ProgressView()
-                                .tint(ThemeColor.primaryNeon)
-                                .scaleEffect(1.2)
-                        }
-                    }
-
-                    Spacer()
-
-                    if !isConnecting {
-                        VStack(spacing: ThemeSpacing.m) {
-                            Button("Continue with Plaid") {
-                                connectToPlaid()
-                            }
-                            .font(.headline)
-                            .foregroundStyle(.black)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, ThemeSpacing.l)
-                            .background(ThemeColor.primaryNeon, in: RoundedRectangle(cornerRadius: ThemeRadius.container))
-
-                            Text("Your credentials are encrypted and secure")
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
-                                .multilineTextAlignment(.center)
-                        }
+                        Text("Securely link your bank via Plaid to import transactions. We never store credentials.")
+                            .font(.body)
+                            .foregroundStyle(ModernColors.textSecondary)
+                            .multilineTextAlignment(.center)
                     }
                 }
+
+                Spacer()
+
+                VStack(spacing: ModernSpacing.md) {
+                    Button(action: {
+                        Task { await launchPlaid() }
+                    }) {
+                        HStack {
+                            if isLaunching { ProgressView().tint(.black) }
+                            Text(isLaunching ? "Launching…" : "Continue")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, ModernSpacing.xl)
+                        .background(ModernColors.accent, in: RoundedRectangle(cornerRadius: ModernRadius.container))
+                    }
+                    .disabled(isLaunching)
+
+                    Button("Cancel") { dismiss() }
+                        .font(.subheadline)
+                        .foregroundStyle(ModernColors.textSecondary)
+                }
             }
-            .padding(ThemeSpacing.xl)
-            .background {
-                NeonBackground()
-            }
-            .navigationTitle("Link Account")
+            .padding(ModernSpacing.xl)
+            .navigationTitle("Connect Account")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Cancel") {
+                    Button("Done") {
                         dismiss()
                     }
-                    .foregroundStyle(.secondary)
-                    .disabled(isConnecting)
                 }
             }
         }
+        .background(ModernBackground())
+        .alert(viewModel.errorMessage ?? "", isPresented: Binding(
+            get: { viewModel.hasError },
+            set: { _ in viewModel.hasError = false }
+        )) {
+            Button("OK", role: .cancel) { viewModel.hasError = false }
+        }
     }
 
-    private func connectToPlaid() {
-        isConnecting = true
-
-        Task {
-            let cards = await cardProvider.fetchCardsForReview()
-
-            try? await Task.sleep(for: .seconds(2))
-
-            await MainActor.run {
-                uiState.cardsToReview = cards
-                isConnecting = false
-                connectionComplete = true
-
-                #if os(iOS)
-                let impact = UIImpactFeedbackGenerator(style: .medium)
-                impact.impactOccurred()
-                #endif
+    private func launchPlaid() async {
+        isLaunching = true
+        defer { isLaunching = false }
+        do {
+            var vm = viewModel
+            let success = try await vm.beginLinkFlow()
+            if success {
+                uiState.dismissPlaidLink()
+                dismiss()
             }
+        } catch {
+            // Surface via viewModel error binding
         }
     }
 }
 
-#Preview("Initial") {
+#Preview {
     PlaidLinkSheet()
         .environment(UIState())
-}
-
-#Preview("Connecting") {
-    let sheet = PlaidLinkSheet()
-    return sheet
-        .environment(UIState())
-        .onAppear {
-            // Simulate connecting state for preview
-        }
 }

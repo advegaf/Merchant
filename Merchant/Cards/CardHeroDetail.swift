@@ -88,7 +88,7 @@ struct CardHeroDetail: View {
                                         Spacer()
                                     }
 
-                                    Text("Best for dining purchases with 3× points per dollar spent. No foreign transaction fees.")
+                                    Text(CardBenefitsCatalog.benefits(for: card.selectionKey))
                                         .font(.body)
                                         .foregroundStyle(.secondary)
                                         .multilineTextAlignment(.leading)

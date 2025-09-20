@@ -23,13 +23,27 @@ struct HomeView: View {
         }
         .task {
             if uiState.isSignedIn && cards.isEmpty {
-                cards = await cardProvider.fetchCardsForReview()
+                let all = await cardProvider.fetchCardsForReview()
+                let selected = SelectedCardsStore.shared.selectedKeys
+                cards = selected.isEmpty ? all : all.filter { selected.contains($0.selectionKey) }
             }
         }
         .onChange(of: uiState.isSignedIn) { _, newValue in
             if newValue && cards.isEmpty {
                 Task {
-                    cards = await cardProvider.fetchCardsForReview()
+                    let all = await cardProvider.fetchCardsForReview()
+                    let selected = SelectedCardsStore.shared.selectedKeys
+                    cards = selected.isEmpty ? all : all.filter { selected.contains($0.selectionKey) }
+                    uiState.presentCardPickerIfNeeded()
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .selectedCardsChanged)) { _ in
+            Task {
+                let all = await cardProvider.fetchCardsForReview()
+                let selected = SelectedCardsStore.shared.selectedKeys
+                withAnimation {
+                    cards = selected.isEmpty ? all : all.filter { selected.contains($0.selectionKey) }
                 }
             }
         }
@@ -48,10 +62,16 @@ struct SignedInHomeView: View {
                 PremiumHeader(showInsights: $showInsights)
 
                 if !cards.isEmpty {
+                    // Live Activity-style current session
+                    LiveSessionPanel()
+
+                    // Quick Actions Grid
+                    QuickActionsGrid()
+
                     // Now panel with current recommendation
                     NowRecommendationPanel()
 
-                    // Cards section
+                    // Cards section with enhanced styling
                     VStack(spacing: ModernSpacing.xl) {
                         HStack {
                             Text("Your Cards")
@@ -59,9 +79,7 @@ struct SignedInHomeView: View {
                                 .fontWeight(.semibold)
                                 .foregroundStyle(ModernColors.textPrimary)
                             Spacer()
-                            Button("Manage") {
-                                // TODO: Navigate to card management
-                            }
+                            Button("Manage") { uiState.showCardPicker = true }
                             .font(.subheadline)
                             .foregroundStyle(ModernColors.accent)
                         }
@@ -70,10 +88,16 @@ struct SignedInHomeView: View {
                             .frame(height: 280)
                     }
 
+                    // Enhanced Weekly Summary with iOS-style cards
+                    WeeklySummarySection()
+
                     // Insights section
                     if showInsights {
                         InsightsSection()
                     }
+
+                    // Recent Activity Feed
+                    RecentActivitySection()
                 } else {
                     // Empty state with premium design
                     PremiumEmptyState()
@@ -322,12 +346,15 @@ struct PremiumEmptyState: View {
                 }
 
                 Button(action: {
-                    uiState.showPlaidLinkSheet = true
+                    // Mock card addition - will connect real cards later
+                    withAnimation(CinematicSprings.elegant) {
+                        uiState.signIn()
+                    }
                 }) {
                     HStack(spacing: ModernSpacing.lg) {
-                        Image(systemName: "plus.circle.fill")
+                        Image(systemName: "creditcard.and.123")
                             .font(.title3)
-                        Text("Connect Cards")
+                        Text("Add Cards")
                             .font(.headline)
                             .fontWeight(.semibold)
                     }
@@ -427,6 +454,374 @@ struct SignedOutOverlay: View {
                 }
             }
             .padding(.horizontal, ModernSpacing.huge)
+        }
+    }
+}
+
+// MARK: - Enhanced iOS Components
+
+struct LiveSessionPanel: View {
+    @State private var isActive = true
+    @State private var currentLocation = "The Local Bistro"
+    @State private var sessionDuration = "12m"
+
+    var body: some View {
+        ModernGlassCard(style: .premium) {
+            HStack(spacing: ModernSpacing.lg) {
+                // Live indicator with pulsing animation
+                ZStack {
+                    Circle()
+                        .fill(ModernColors.success)
+                        .frame(width: 12, height: 12)
+                        .scaleEffect(isActive ? 1.2 : 1.0)
+                        .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isActive)
+
+                    Circle()
+                        .fill(ModernColors.success.opacity(0.3))
+                        .frame(width: 20, height: 20)
+                        .scaleEffect(isActive ? 1.5 : 1.0)
+                        .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: isActive)
+                }
+
+                VStack(alignment: .leading, spacing: ModernSpacing.xs) {
+                    HStack {
+                        Text("Live Session")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundStyle(ModernColors.success)
+
+                        Text("•")
+                            .foregroundStyle(ModernColors.textTertiary)
+
+                        Text(sessionDuration)
+                            .font(.caption)
+                            .foregroundStyle(ModernColors.textTertiary)
+                    }
+
+                    Text(currentLocation)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(ModernColors.textPrimary)
+                }
+
+                Spacer()
+
+                Button(action: {
+                    withAnimation(CinematicSprings.elegant) {
+                        isActive.toggle()
+                    }
+                }) {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(ModernColors.accent)
+                        .padding(ModernSpacing.sm)
+                        .background {
+                            Circle()
+                                .fill(.ultraThinMaterial)
+                        }
+                }
+            }
+            .padding(ModernSpacing.xl)
+        }
+        .onAppear {
+            isActive = true
+        }
+    }
+}
+
+struct QuickActionsGrid: View {
+    @Environment(UIState.self) private var uiState
+    var body: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible()),
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ], spacing: ModernSpacing.lg) {
+            QuickActionButton(
+                icon: "location.fill",
+                title: "Nearby",
+                color: ModernColors.accent
+            )
+
+            QuickActionButton(
+                icon: "chart.bar.fill",
+                title: "Insights",
+                color: ModernColors.premium
+            )
+
+            Button(action: {
+                uiState.presentPlaidLink()
+            }) {
+                VStack(spacing: ModernSpacing.sm) {
+                    Image(systemName: "link")
+                        .font(.title2)
+                        .foregroundStyle(ModernColors.reward)
+                        .frame(width: 44, height: 44)
+                        .background {
+                            Circle()
+                                .fill(.ultraThinMaterial)
+                                .overlay {
+                                    Circle()
+                                        .stroke(ModernColors.reward.opacity(0.2), lineWidth: 1)
+                                }
+                        }
+
+                    Text("Connect")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundStyle(ModernColors.textSecondary)
+                }
+            }
+
+            QuickActionButton(
+                icon: "gearshape.fill",
+                title: "Settings",
+                color: ModernColors.textSecondary
+            )
+        }
+    }
+}
+
+struct QuickActionButton: View {
+    let icon: String
+    let title: String
+    let color: Color
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: {
+            CinematicHaptics.play(.selection)
+        }) {
+            VStack(spacing: ModernSpacing.sm) {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundStyle(color)
+                    .frame(width: 44, height: 44)
+                    .background {
+                        Circle()
+                            .fill(.ultraThinMaterial)
+                            .overlay {
+                                Circle()
+                                    .stroke(color.opacity(0.2), lineWidth: 1)
+                            }
+                    }
+
+                Text(title)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundStyle(ModernColors.textSecondary)
+            }
+        }
+        .scaleEffect(isPressed ? 0.95 : 1.0)
+        .animation(CinematicSprings.immediate, value: isPressed)
+        .onLongPressGesture(minimumDuration: 0) { isPressed in
+            self.isPressed = isPressed
+        } perform: {}
+    }
+}
+
+struct WeeklySummarySection: View {
+    var body: some View {
+        VStack(spacing: ModernSpacing.xl) {
+            HStack {
+                Text("This Week")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(ModernColors.textPrimary)
+                Spacer()
+                Button("View All") {
+                    // TODO: Navigate to full insights
+                }
+                .font(.subheadline)
+                .foregroundStyle(ModernColors.accent)
+            }
+
+            ModernGlassCard(style: .secondary) {
+                VStack(spacing: ModernSpacing.lg) {
+                    // Top metrics row
+                    HStack(spacing: ModernSpacing.lg) {
+                        WeeklyMetricTile(
+                            value: "$127",
+                            label: "Earned",
+                            color: ModernColors.success,
+                            icon: "arrow.up.circle.fill"
+                        )
+
+                        WeeklyMetricTile(
+                            value: "4.2×",
+                            label: "Avg Multiplier",
+                            color: ModernColors.premium,
+                            icon: "multiply.circle.fill"
+                        )
+                    }
+
+                    // Progress indicator
+                    VStack(alignment: .leading, spacing: ModernSpacing.sm) {
+                        HStack {
+                            Text("Optimization Score")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundStyle(ModernColors.textPrimary)
+                            Spacer()
+                            Text("92%")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(ModernColors.success)
+                        }
+
+                        ProgressView(value: 0.92)
+                            .tint(ModernColors.success)
+                            .background(ModernColors.textQuaternary.opacity(0.2))
+                    }
+                }
+                .padding(ModernSpacing.xl)
+            }
+        }
+    }
+}
+
+struct WeeklyMetricTile: View {
+    let value: String
+    let label: String
+    let color: Color
+    let icon: String
+
+    var body: some View {
+        VStack(spacing: ModernSpacing.sm) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundStyle(color)
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: ModernSpacing.xs) {
+                Text(value)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(color)
+
+                Text(label)
+                    .font(.caption)
+                    .foregroundStyle(ModernColors.textTertiary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(ModernSpacing.lg)
+        .background {
+            RoundedRectangle(cornerRadius: ModernRadius.lg)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: ModernRadius.lg)
+                        .stroke(color.opacity(0.1), lineWidth: 1)
+                }
+        }
+    }
+}
+
+struct RecentActivitySection: View {
+    var body: some View {
+        VStack(spacing: ModernSpacing.xl) {
+            HStack {
+                Text("Recent Activity")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(ModernColors.textPrimary)
+                Spacer()
+            }
+
+            VStack(spacing: ModernSpacing.md) {
+                ActivityRow(
+                    merchant: "Starbucks Coffee",
+                    amount: "$4.25",
+                    points: "+13 pts",
+                    time: "2h ago",
+                    category: .dining
+                )
+
+                ActivityRow(
+                    merchant: "Shell Gas Station",
+                    amount: "$45.20",
+                    points: "+90 pts",
+                    time: "1d ago",
+                    category: .gas
+                )
+
+                ActivityRow(
+                    merchant: "Whole Foods Market",
+                    amount: "$87.50",
+                    points: "+175 pts",
+                    time: "2d ago",
+                    category: .groceries
+                )
+            }
+        }
+    }
+}
+
+struct ActivityRow: View {
+    let merchant: String
+    let amount: String
+    let points: String
+    let time: String
+    let category: PurchaseCategory
+
+    var body: some View {
+        ModernGlassCard(style: .secondary) {
+            HStack(spacing: ModernSpacing.lg) {
+                // Category icon
+                Image(systemName: categoryIcon(for: category))
+                    .font(.title3)
+                    .foregroundStyle(ModernColors.purchaseContextColor(for: category))
+                    .frame(width: 40, height: 40)
+                    .background {
+                        Circle()
+                            .fill(.ultraThinMaterial)
+                            .overlay {
+                                Circle()
+                                    .stroke(ModernColors.purchaseContextColor(for: category).opacity(0.2), lineWidth: 1)
+                            }
+                    }
+
+                VStack(alignment: .leading, spacing: ModernSpacing.xs) {
+                    Text(merchant)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(ModernColors.textPrimary)
+
+                    Text(time)
+                        .font(.caption)
+                        .foregroundStyle(ModernColors.textTertiary)
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: ModernSpacing.xs) {
+                    Text(amount)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(ModernColors.textPrimary)
+
+                    Text(points)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(ModernColors.success)
+                }
+            }
+            .padding(ModernSpacing.lg)
+        }
+    }
+
+    private func categoryIcon(for category: PurchaseCategory) -> String {
+        switch category {
+        case .dining: return "fork.knife"
+        case .groceries: return "cart.fill"
+        case .gas: return "fuelpump.fill"
+        case .travel: return "airplane"
+        case .shopping: return "bag.fill"
+        case .utilities: return "house.fill"
+        case .other: return "ellipsis.circle.fill"
         }
     }
 }

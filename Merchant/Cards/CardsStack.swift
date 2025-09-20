@@ -172,6 +172,10 @@ struct CardsStack: View {
             .onEnded { value in
                 if index == focusIndex {
                     handleAdvancedDragEnd(value.translation, velocity: value.velocity)
+                    // If swiped up enough, open detail
+                    if value.translation.height < -100 {
+                        handleAdvancedCardTap(index: index, card: cards[index])
+                    }
                 }
             }
     }

@@ -8,22 +8,26 @@ import SwiftUI
 @Observable
 final class UIState {
     var isSignedIn = false
-    var showPlaidLinkSheet = false
-    var showReviewCardsSheet = false
     var showAuthSheet = false
-    var cardsToReview: [CardUI] = []
+    var showPlaidLinkSheet = false
+    var showCardPicker = false
 
     func signIn() {
         isSignedIn = true
         showAuthSheet = false
     }
 
-    func showPlaidLink() {
+    func presentPlaidLink() {
         showPlaidLinkSheet = true
     }
 
-    func completeCardReview(selectedCards: [CardUI]) {
-        showReviewCardsSheet = false
-        cardsToReview = []
+    func dismissPlaidLink() {
+        showPlaidLinkSheet = false
+    }
+
+    func presentCardPickerIfNeeded() {
+        if !SelectedCardsStore.shared.hasCompletedOnboarding {
+            showCardPicker = true
+        }
     }
 }
