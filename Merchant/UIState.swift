@@ -11,6 +11,7 @@ final class UIState {
     var showAuthSheet = false
     var showPlaidLinkSheet = false
     var showCardPicker = false
+    var showNearbyCategories = false
 
     func signIn() {
         isSignedIn = true

@@ -60,11 +60,8 @@ struct CardsStack: View {
                 )
                 .scaleEffect(cardScale)
                 .offset(x: cardXOffset, y: cardYOffset)
-                .rotation3DEffect(
-                    .degrees(cardRotation),
-                    axis: (x: 0.1, y: 1, z: 0.05),
-                    perspective: 0.8
-                )
+                // Straight stack: remove 3D tilt
+                .rotation3DEffect(.degrees(0), axis: (x: 0, y: 0, z: 0))
                 .opacity(cardOpacity)
                 .animation(
                     index == focusIndex ? CinematicSprings.elegant : CinematicSprings.ambient,
@@ -120,7 +117,7 @@ struct CardsStack: View {
                 }
             }
 
-            CinematicHaptics.playCardInteraction()
+            CinematicHaptics.play(.impact(intensity: 0.5))
         } else {
             // Focus change with cascade effect
             let direction = index > focusIndex ? 1 : -1
@@ -311,21 +308,14 @@ struct CardsStack: View {
     }
 
     private func enhancedXOffset(for index: Int) -> CGFloat {
-        let baseOffset = CGFloat(index - focusIndex) * 6
+        // Straight vertical stack: no horizontal spread
+        let baseOffset: CGFloat = 0
 
         // Primary drag effect with momentum
-        if index == focusIndex && isDragging {
-            let momentumFactor = min(abs(gestureVelocity.width) / 1000, 1.0)
-            return baseOffset + (dragOffset.width * (0.7 + momentumFactor * 0.2))
-        }
+        if index == focusIndex && isDragging { return baseOffset }
 
         // Advanced parallax for background cards
-        if index != focusIndex && isDragging {
-            let distance = abs(CGFloat(index - focusIndex))
-            let parallaxFactor = 1.0 / (distance + 1)
-            let directionFactor = index > focusIndex ? 1.0 : -1.0
-            return baseOffset + (dragOffset.width * parallaxFactor * 0.15 * directionFactor)
-        }
+        if index != focusIndex && isDragging { return baseOffset }
 
         return baseOffset
     }
@@ -408,3 +398,4 @@ struct CardsStack: View {
     }
     .preferredColorScheme(.dark)
 }
+

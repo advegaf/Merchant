@@ -31,6 +31,14 @@ struct RootView: View {
                     CardPickerSheet()
                         .environment(SelectedCardsStore.shared)
                 }
+                .sheet(
+                    isPresented: Binding(
+                        get: { uiState.showNearbyCategories },
+                        set: { uiState.showNearbyCategories = $0 }
+                    )
+                ) {
+                    NearbyCategoriesSheet()
+                }
         }
     }
 }

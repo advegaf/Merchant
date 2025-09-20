@@ -155,6 +155,7 @@ struct PremiumHeader: View {
 }
 
 struct NowRecommendationPanel: View {
+    @Environment(\.openURL) private var openURL
     var body: some View {
         ModernGlassCard(style: .premium) {
             VStack(spacing: ModernSpacing.xl) {
@@ -206,7 +207,9 @@ struct NowRecommendationPanel: View {
                     Spacer()
 
                     Button(action: {
-                        // TODO: Quick action
+                        if let url = URL(string: "shoebox://") {
+                            openURL(url)
+                        }
                     }) {
                         HStack(spacing: ModernSpacing.sm) {
                             Text("Use Card")
@@ -542,7 +545,7 @@ struct QuickActionsGrid: View {
                 icon: "location.fill",
                 title: "Nearby",
                 color: ModernColors.accent
-            )
+            ).onTapGesture { uiState.showNearbyCategories = true }
 
             QuickActionButton(
                 icon: "chart.bar.fill",
