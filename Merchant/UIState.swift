@@ -4,6 +4,7 @@
 // Constraints: No business logic, purely presentation state
 
 import SwiftUI
+import Observation
 
 @Observable
 final class UIState {
@@ -12,6 +13,9 @@ final class UIState {
     var showPlaidLinkSheet = false
     var showCardPicker = false
     var showNearbyCategories = false
+    var showTransactionsSheet = false
+    var showAccountSheet = false
+    var showAddSpendSheet = false
 
     func signIn() {
         isSignedIn = true

@@ -39,6 +39,27 @@ struct RootView: View {
                 ) {
                     NearbyCategoriesSheet()
                 }
+                .sheet(
+                    isPresented: Binding(
+                        get: { uiState.showTransactionsSheet },
+                        set: { uiState.showTransactionsSheet = $0 }
+                    )
+                ) { TransactionsListSheet() }
+                .sheet(
+                    isPresented: Binding(
+                        get: { uiState.showAccountSheet },
+                        set: { uiState.showAccountSheet = $0 }
+                    )
+                ) { AccountSheet() }
+                .sheet(
+                    isPresented: Binding(
+                        get: { uiState.showAddSpendSheet },
+                        set: { uiState.showAddSpendSheet = $0 }
+                    )
+                ) { AddSpendSheet() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ShowTransactionsFromHeader"))) { _ in
+            uiState.showTransactionsSheet = true
         }
     }
 }

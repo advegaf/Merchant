@@ -4,6 +4,7 @@
 // Constraints: No business logic, purely presentation state
 
 import SwiftUI
+import Observation
 
 @Observable
 final class UIState {

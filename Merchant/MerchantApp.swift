@@ -10,6 +10,7 @@ import CoreLocation
 struct MerchantApp: App {
     @State private var uiState = UIState()
     @State private var orchestrator: VisitNotificationOrchestrator? = nil
+    @State private var geoOrch: GeofenceOrchestrator? = nil
 
     var body: some Scene {
         WindowGroup {
@@ -23,8 +24,18 @@ struct MerchantApp: App {
                     let notifier = NotificationService()
                     let orch = VisitNotificationOrchestrator(locationService: location, detector: detector, notifier: notifier)
                     orchestrator = orch
-                    await location.requestAuthorization()
-                    await orch.start()
+                    if PrivacyKeys.hasLocationWhenInUse {
+                        location.requestAuthorization()
+                        orch.start()
+                    }
+
+                    // Start geofencing for near-instant entry alerts
+                    if PrivacyKeys.hasLocationAlways {
+                        let geofencer = GeofenceManager()
+                        let geo = GeofenceOrchestrator(geofencer: geofencer, notifier: notifier)
+                        geoOrch = geo
+                        await geo.start()
+                    }
                 }
         }
     }

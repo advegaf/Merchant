@@ -22,10 +22,10 @@ public final class VisitNotificationOrchestrator {
         }
     }
 
-    public func start() async {
+    public func start() {
         guard FeatureFlags.PlaidSync else { return }
-        _ = await notifier.requestAuthorization()
-        await locationService.start()
+        Task { _ = await notifier.requestAuthorization() }
+        locationService.start()
     }
 
     private func venueKey(for visit: CLVisit) -> String {

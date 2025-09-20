@@ -112,6 +112,7 @@ struct SignedInHomeView: View {
 
 struct PremiumHeader: View {
     @Binding var showInsights: Bool
+    @Environment(UIState.self) private var uiState
 
     var body: some View {
         HStack {
@@ -140,7 +141,7 @@ struct PremiumHeader: View {
                 }
 
                 Button(action: {
-                    // TODO: Profile action
+                    uiState.showAccountSheet = true
                 }) {
                     ModernGlassCard(style: .secondary) {
                         Image(systemName: "person.crop.circle.fill")
@@ -465,8 +466,11 @@ struct SignedOutOverlay: View {
 
 struct LiveSessionPanel: View {
     @State private var isActive = true
-    @State private var currentLocation = "The Local Bistro"
-    @State private var sessionDuration = "12m"
+    @State private var currentLocation = "Nearby"
+    @State private var sessionStart = Date()
+    @State private var timer: Timer? = nil
+    @State private var now = Date()
+    private let placeProvider = CurrentPlaceProvider()
 
     var body: some View {
         ModernGlassCard(style: .premium) {
@@ -496,7 +500,7 @@ struct LiveSessionPanel: View {
                         Text("•")
                             .foregroundStyle(ModernColors.textTertiary)
 
-                        Text(sessionDuration)
+                        Text(formattedDuration())
                             .font(.caption)
                             .foregroundStyle(ModernColors.textTertiary)
                     }
@@ -528,7 +532,25 @@ struct LiveSessionPanel: View {
         }
         .onAppear {
             isActive = true
+            placeProvider.start { name, start in
+                currentLocation = name
+                sessionStart = start
+            }
+            timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
+                now = Date()
+            }
         }
+        .onDisappear { timer?.invalidate(); placeProvider.stop() }
+    }
+
+    private func formattedDuration() -> String {
+        let seconds = Int(now.timeIntervalSince(sessionStart).rounded())
+        if seconds < 60 { return "<1m" }
+        let minutes = seconds / 60
+        if minutes < 60 { return "\(minutes)m" }
+        let hours = minutes / 60
+        let rem = minutes % 60
+        return "\(hours)h \(rem)m"
     }
 }
 
@@ -625,6 +647,7 @@ struct QuickActionButton: View {
 }
 
 struct WeeklySummarySection: View {
+    @State private var mostUsedCategory: String = ""
     var body: some View {
         VStack(spacing: ModernSpacing.xl) {
             HStack {
@@ -633,9 +656,7 @@ struct WeeklySummarySection: View {
                     .fontWeight(.semibold)
                     .foregroundStyle(ModernColors.textPrimary)
                 Spacer()
-                Button("View All") {
-                    // TODO: Navigate to full insights
-                }
+                Button("View All") { NotificationCenter.default.post(name: Notification.Name("ShowTransactionsFromHeader"), object: nil) }
                 .font(.subheadline)
                 .foregroundStyle(ModernColors.accent)
             }
@@ -676,11 +697,24 @@ struct WeeklySummarySection: View {
                         ProgressView(value: 0.92)
                             .tint(ModernColors.success)
                             .background(ModernColors.textQuaternary.opacity(0.2))
+                        if !mostUsedCategory.isEmpty {
+                            Text("Most used: \(mostUsedCategory)")
+                                .font(.caption)
+                                .foregroundStyle(ModernColors.textTertiary)
+                        }
                     }
                 }
                 .padding(ModernSpacing.xl)
             }
         }
+        .onAppear { updateMostUsed() }
+        .onReceive(NotificationCenter.default.publisher(for: .transactionsChanged)) { _ in updateMostUsed() }
+    }
+
+    private func updateMostUsed() {
+        let cats = TransactionStore.shared.all().map { $0.category }
+        let counts = Dictionary(grouping: cats, by: { $0 }).mapValues { $0.count }
+        mostUsedCategory = counts.max(by: { $0.value < $1.value })?.key ?? ""
     }
 }
 
@@ -724,6 +758,7 @@ struct WeeklyMetricTile: View {
 }
 
 struct RecentActivitySection: View {
+    @Environment(UIState.self) private var uiState
     var body: some View {
         VStack(spacing: ModernSpacing.xl) {
             HStack {
@@ -732,6 +767,9 @@ struct RecentActivitySection: View {
                     .fontWeight(.semibold)
                     .foregroundStyle(ModernColors.textPrimary)
                 Spacer()
+                Button(action: { uiState.showAddSpendSheet = true }) {
+                    Image(systemName: "plus.circle.fill")
+                }
             }
 
             VStack(spacing: ModernSpacing.md) {
