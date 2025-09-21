@@ -1,881 +1,664 @@
-// Rules: Premium home screen with sophisticated layout, true dark theme, award-level visual hierarchy
-// Inputs: UIState authentication status, card data
-// Outputs: Blurred content + auth overlay OR premium home with cards and insights
-// Constraints: True dark background, electric neon accents, liquid glass depth
+// Rules: Clean, professional home screen with consistent design system
+// Inputs: UIState authentication status, card data, user profile
+// Outputs: Polished dashboard with proper hierarchy and spacing
+// Constraints: Clean animations, consistent spacing, professional feel
 
 import SwiftUI
 
 struct HomeView: View {
     @Environment(UIState.self) private var uiState
+    @Environment(SelectedCardsStore.self) private var selectedCards
+    @Environment(UserProfileStore.self) private var userProfile
     @State private var cards: [CardUI] = []
     @State private var cardProvider = MockCardArtProvider()
-    @State private var showInsights = false
+    @State private var selectedTab: TabBarItem = .home
 
     var body: some View {
         ZStack {
-            ModernBackground()
+            CopilotDesign.Colors.background
+                .ignoresSafeArea()
 
-            if uiState.isSignedIn {
-                SignedInHomeView(cards: cards, showInsights: $showInsights)
+            if !selectedCards.hasCompletedOnboarding {
+                CleanWelcomeView {
+                    SelectedCardsStore.shared.hasCompletedOnboarding = true
+                }
+                .transition(.opacity)
             } else {
-                SignedOutOverlay()
+                VStack(spacing: 0) {
+                    // Scrollable content with header inside
+                    MainContent(cards: cards)
+                }
             }
         }
         .task {
-            if uiState.isSignedIn && cards.isEmpty {
-                let all = await cardProvider.fetchCardsForReview()
-                let selected = SelectedCardsStore.shared.selectedKeys
-                cards = selected.isEmpty ? all : all.filter { selected.contains($0.selectionKey) }
-            }
-        }
-        .onChange(of: uiState.isSignedIn) { _, newValue in
-            if newValue && cards.isEmpty {
-                Task {
-                    let all = await cardProvider.fetchCardsForReview()
-                    let selected = SelectedCardsStore.shared.selectedKeys
-                    cards = selected.isEmpty ? all : all.filter { selected.contains($0.selectionKey) }
-                    uiState.presentCardPickerIfNeeded()
-                }
+            if cards.isEmpty {
+                await reloadCards()
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .selectedCardsChanged)) { _ in
-            Task {
-                let all = await cardProvider.fetchCardsForReview()
-                let selected = SelectedCardsStore.shared.selectedKeys
-                withAnimation {
-                    cards = selected.isEmpty ? all : all.filter { selected.contains($0.selectionKey) }
-                }
-            }
+            Task { await reloadCards() }
+        }
+        .sheet(isPresented: Binding(
+            get: { uiState.showNearbySheet },
+            set: { uiState.showNearbySheet = $0 }
+        )) {
+            NearbySheet()
+        }
+        .sheet(isPresented: Binding(
+            get: { uiState.showAddSpendSheet },
+            set: { uiState.showAddSpendSheet = $0 }
+        )) {
+            AddSpendSheet()
+        }
+        .sheet(isPresented: Binding(
+            get: { uiState.showTransactionsSheet },
+            set: { uiState.showTransactionsSheet = $0 }
+        )) {
+            TransactionsListSheet()
+        }
+        .sheet(isPresented: Binding(
+            get: { uiState.showNotificationSettings },
+            set: { uiState.showNotificationSettings = $0 }
+        )) {
+            NotificationSettingsSheet()
+        }
+        .sheet(isPresented: Binding(
+            get: { uiState.showOptimizationBreakdown },
+            set: { uiState.showOptimizationBreakdown = $0 }
+        )) {
+            OptimizationBreakdownSheet()
+        }
+        .sheet(isPresented: Binding(
+            get: { uiState.showCardPicker },
+            set: { uiState.showCardPicker = $0 }
+        )) {
+            CardPickerSheet()
+                .environment(SelectedCardsStore.shared)
+        }
+        .sheet(isPresented: Binding(
+            get: { uiState.showSettingsSheet },
+            set: { uiState.showSettingsSheet = $0 }
+        )) {
+            BeautifulSettingsSheet()
+        }
+        .sheet(isPresented: Binding(
+            get: { uiState.showNearbyCategories },
+            set: { uiState.showNearbyCategories = $0 }
+        )) {
+            NearbyCategoriesSheet()
         }
     }
 }
 
-struct SignedInHomeView: View {
+// MARK: - Data Loading
+
+extension HomeView {
+    fileprivate func reloadCards() async {
+        let all = await cardProvider.fetchCardsForReview()
+        let selected = SelectedCardsStore.shared.selectedKeys
+        if selected.isEmpty {
+            cards = all
+        } else {
+            let filtered = all.filter { selected.contains($0.selectionKey) }
+            cards = filtered.isEmpty ? all : filtered
+        }
+    }
+}
+
+struct MainContent: View {
     let cards: [CardUI]
-    @Binding var showInsights: Bool
     @Environment(UIState.self) private var uiState
+    @Environment(UserProfileStore.self) private var userProfile
 
     var body: some View {
         ScrollView {
-            VStack(spacing: ModernSpacing.xxxl) {
-                // Header with greeting and insights toggle
-                PremiumHeader(showInsights: $showInsights)
+            VStack(spacing: 32) {
+                // Header (scrolls; not sticky)
+                HeaderSection()
 
+                // Cards Section
                 if !cards.isEmpty {
-                    // Live Activity-style current session
-                    LiveSessionPanel()
-
-                    // Quick Actions Grid
-                    QuickActionsGrid()
-
-                    // Now panel with current recommendation
-                    NowRecommendationPanel()
-
-                    // Cards section with enhanced styling
-                    VStack(spacing: ModernSpacing.xl) {
-                        HStack {
-                            Text("Your Cards")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(ModernColors.textPrimary)
-                            Spacer()
-                            Button("Manage") { uiState.showCardPicker = true }
-                            .font(.subheadline)
-                            .foregroundStyle(ModernColors.accent)
-                        }
-
-                        CardsStack(cards: cards)
-                            .frame(height: 280)
-                    }
-
-                    // Enhanced Weekly Summary with iOS-style cards
-                    WeeklySummarySection()
-
-                    // Insights section
-                    if showInsights {
-                        InsightsSection()
-                    }
-
-                    // Recent Activity Feed
-                    RecentActivitySection()
-                } else {
-                    // Empty state with premium design
-                    PremiumEmptyState()
+                    CardsSection(cards: cards)
                 }
+
+                // Nearby quick action (moved below cards)
+                NearbyQuickButton()
+
+
+                // Stats Section
+                StatsSection()
+
+                // Recent Activity
+                ActivitySection()
             }
-            .padding(.horizontal, ModernSpacing.xl)
-            .padding(.top, ModernSpacing.xxl)
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 24)
         }
         .scrollIndicators(.hidden)
     }
 }
 
-struct PremiumHeader: View {
-    @Binding var showInsights: Bool
+struct HeaderSection: View {
+    @Environment(UserProfileStore.self) private var userProfile
     @Environment(UIState.self) private var uiState
 
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: ModernSpacing.sm) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Good evening")
-                    .font(.subheadline)
-                    .foregroundStyle(ModernColors.textSecondary)
+                    .font(CopilotDesign.Typography.bodyMedium)
+                    .foregroundStyle(CopilotDesign.Colors.textTertiary)
 
-                Text("Merchant")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundStyle(ModernColors.accent)
+                Text(userProfile.displayName)
+                    .font(CopilotDesign.Typography.displayMedium)
+                    .foregroundStyle(CopilotDesign.Colors.textPrimary)
             }
 
             Spacer()
 
-            HStack(spacing: ModernSpacing.lg) {
-                Button(action: {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                        showInsights.toggle()
-                    }
-                }) {
-                    Image(systemName: showInsights ? "chart.bar.fill" : "chart.bar")
-                        .font(.title2)
-                        .foregroundStyle(showInsights ? ModernColors.accent : ModernColors.textSecondary)
-                }
-
-                Button(action: {
-                    uiState.showAccountSheet = true
-                }) {
-                    ModernGlassCard(style: .secondary) {
-                        Image(systemName: "person.crop.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(ModernColors.textSecondary)
-                            .frame(width: 44, height: 44)
-                    }
-                }
+            // Settings button
+            Button(action: { uiState.showSettingsSheet = true }) {
+                Image(systemName: "gearshape.fill")
+                    .font(.title3)
+                    .foregroundStyle(CopilotDesign.Colors.textSecondary)
+                    .frame(width: 40, height: 40)
+                    .background { Circle().fill(.ultraThinMaterial) }
             }
+            .buttonStyle(.plain)
         }
     }
 }
 
-struct NowRecommendationPanel: View {
-    @Environment(\.openURL) private var openURL
+struct NearbyQuickButton: View {
+    @Environment(UIState.self) private var uiState
     var body: some View {
-        ModernGlassCard(style: .premium) {
-            VStack(spacing: ModernSpacing.xl) {
-                HStack {
-                    VStack(alignment: .leading, spacing: ModernSpacing.sm) {
-                        HStack {
-                            Image(systemName: "location.fill")
-                                .font(.caption)
-                                .foregroundStyle(ModernColors.accent)
-                            Text("The Local Bistro")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundStyle(ModernColors.accent)
-                        }
-
-                        Text("Use Sapphire Preferred")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundStyle(ModernColors.textPrimary)
-
-                        Text("Earn 3× points on dining • +$47 expected")
-                            .font(.subheadline)
-                            .foregroundStyle(ModernColors.textSecondary)
-                    }
-
-                    Spacer()
-
-                    VStack {
-                        Text("3×")
-                            .font(.title)
-                            .fontWeight(.black)
-                            .foregroundStyle(ModernColors.reward)
-
-                        Text("DINING")
-                            .font(.caption2)
-                            .fontWeight(.bold)
-                            .foregroundStyle(ModernColors.textTertiary)
-                            .tracking(1)
-                    }
+        Button(action: { uiState.showNearbySheet = true }) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(CopilotDesign.Colors.accent.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(CopilotDesign.Colors.accent)
                 }
 
-                HStack {
-                    Button("Why this card?") {
-                        // TODO: Show explanation
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(ModernColors.accent)
-
-                    Spacer()
-
-                    Button(action: {
-                        if let url = URL(string: "shoebox://") {
-                            openURL(url)
-                        }
-                    }) {
-                        HStack(spacing: ModernSpacing.sm) {
-                            Text("Use Card")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                            Image(systemName: "arrow.up.right")
-                                .font(.caption)
-                        }
-                        .foregroundStyle(.black)
-                        .padding(.horizontal, ModernSpacing.xl)
-                        .padding(.vertical, ModernSpacing.md)
-                        .background(ModernColors.accent, in: RoundedRectangle(cornerRadius: ModernRadius.button))
-                    }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Nearby")
+                        .font(CopilotDesign.Typography.bodyMedium)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(CopilotDesign.Colors.textPrimary)
+                    Text("Location Based Recommendations")
+                        .font(CopilotDesign.Typography.labelSmall)
+                        .foregroundStyle(CopilotDesign.Colors.textTertiary)
                 }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(CopilotDesign.Colors.textTertiary)
             }
-            .padding(ModernSpacing.xxxl)
+            .padding(16)
+            .background {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(.ultraThinMaterial)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// RecommendationQuickButton removed per request
+
+struct CardsSection: View {
+    let cards: [CardUI]
+    @Environment(UIState.self) private var uiState
+
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text("Your Cards")
+                    .font(CopilotDesign.Typography.headlineMedium)
+                    .foregroundStyle(CopilotDesign.Colors.textPrimary)
+
+                Spacer()
+
+                Button(action: {
+                    uiState.showCardPicker = true
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "square.grid.2x2")
+                            .font(.system(size: 12, weight: .medium))
+                        Text("Manage")
+                            .font(CopilotDesign.Typography.labelSmall)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundStyle(CopilotDesign.Colors.accent)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(CopilotDesign.Colors.accent.opacity(0.1))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .strokeBorder(CopilotDesign.Colors.accent.opacity(0.2), lineWidth: 1)
+                            }
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+
+            PremiumCardsStack(cards: cards)
+                .frame(height: 240)
         }
     }
 }
 
-struct InsightsSection: View {
+struct StatsSection: View {
+    @Environment(UIState.self) private var uiState
+    @StateObject private var activityProvider = RecentActivityProvider()
+
+    private var weeklyStats: (earned: Double, avgMultiplier: Double, transactions: Int, optimization: Double) {
+        let oneWeekAgo = Date().addingTimeInterval(-7 * 24 * 3600)
+        let weeklyTransactions = activityProvider.activities.filter { $0.timestamp >= oneWeekAgo }
+
+        let totalEarnedCash = weeklyTransactions.reduce(0) { $0 + $1.cashValueEarned }
+        let totalSpent = weeklyTransactions.reduce(0) { $0 + $1.amount }
+        let totalPoints = weeklyTransactions.reduce(0) { $0 + $1.pointsEarned }
+        let avgMultiplier = totalSpent > 0 ? (totalPoints / totalSpent) : 0
+        let transactionCount = weeklyTransactions.count
+
+        // Assume an achievable max of 5x for optimization gauge
+        let maxPossiblePoints = totalSpent * 5.0
+        let optimization = maxPossiblePoints > 0 ? (totalPoints / maxPossiblePoints) * 100 : 0
+
+        return (totalEarnedCash, avgMultiplier, transactionCount, optimization)
+    }
+
     var body: some View {
-        VStack(spacing: ModernSpacing.xl) {
+        VStack(spacing: 20) {
             HStack {
                 Text("This Week")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(ModernColors.textPrimary)
+                    .font(CopilotDesign.Typography.headlineMedium)
+                    .foregroundStyle(CopilotDesign.Colors.textPrimary)
                 Spacer()
             }
 
             LazyVGrid(columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible())
-            ], spacing: ModernSpacing.xl) {
-                InsightTile(
-                    title: "$127",
-                    subtitle: "Earned",
-                    color: ModernColors.reward,
-                    icon: "dollarsign.circle.fill"
+            ], spacing: 16) {
+                let hasData = weeklyStats.transactions > 0
+
+                StatCard(
+                    value: hasData ? String(format: "$%.0f", weeklyStats.earned) : "$0",
+                    label: "Earned",
+                    trend: hasData ? "+12%" : "—",
+                    color: CopilotDesign.Colors.success
                 )
 
-                InsightTile(
-                    title: "4.2×",
-                    subtitle: "Avg Multiplier",
-                    color: ModernColors.accent,
-                    icon: "arrow.up.circle.fill"
+                StatCard(
+                    value: hasData ? String(format: "%.1f×", weeklyStats.avgMultiplier) : "—",
+                    label: "Avg multiplier",
+                    trend: hasData ? "+5%" : "—",
+                    color: CopilotDesign.Colors.accent
                 )
 
-                InsightTile(
-                    title: "18",
-                    subtitle: "Transactions",
-                    color: ModernColors.success,
-                    icon: "creditcard.circle.fill"
+                StatCard(
+                    value: "\(weeklyStats.transactions)",
+                    label: "Transactions",
+                    trend: hasData ? (weeklyStats.transactions > 5 ? "+\(weeklyStats.transactions - 5)" : "−\(5 - weeklyStats.transactions)") : "—",
+                    color: CopilotDesign.Colors.info
                 )
 
-                InsightTile(
-                    title: "92%",
-                    subtitle: "Optimization",
-                    color: ModernColors.accent,
-                    icon: "checkmark.circle.fill"
-                )
+                StatCard(
+                    value: hasData ? String(format: "%.0f%%", weeklyStats.optimization) : "—",
+                    label: "Optimization",
+                    trend: hasData ? "+8%" : "—",
+                    color: CopilotDesign.Colors.success
+                ) {
+                    uiState.showOptimizationBreakdown = true
+                }
             }
         }
     }
 }
 
-struct InsightTile: View {
-    let title: String
-    let subtitle: String
+struct StatCard: View {
+    let value: String
+    let label: String
+    let trend: String
     let color: Color
-    let icon: String
+    let action: (() -> Void)?
 
-    var body: some View {
-        ModernGlassCard(style: .secondary) {
-            VStack(spacing: ModernSpacing.lg) {
-                HStack {
-                    Image(systemName: icon)
-                        .font(.title2)
-                        .foregroundStyle(color)
-                    Spacer()
-                }
-
-                VStack(alignment: .leading, spacing: ModernSpacing.sm) {
-                    Text(title)
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundStyle(color)
-
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(ModernColors.textTertiary)
-                }
-            }
-            .padding(ModernSpacing.xl)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
+    init(value: String, label: String, trend: String, color: Color, action: (() -> Void)? = nil) {
+        self.value = value
+        self.label = label
+        self.trend = trend
+        self.color = color
+        self.action = action
     }
-}
-
-struct PremiumEmptyState: View {
-    @Environment(UIState.self) private var uiState
-
-    var body: some View {
-        VStack(spacing: ModernSpacing.huge) {
-            Spacer()
-
-            VStack(spacing: ModernSpacing.xxxl) {
-                // Icon with glow effect
-                ZStack {
-                    Circle()
-                        .fill(ModernColors.accent.opacity(0.1))
-                        .frame(width: 120, height: 120)
-                        .blur(radius: 20)
-
-                    ModernGlassCard(style: .premium) {
-                        Image(systemName: "creditcard.and.123")
-                            .font(.system(size: 48))
-                            .foregroundStyle(ModernColors.accent)
-                            .frame(width: 120, height: 120)
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 60))
-                }
-
-                VStack(spacing: ModernSpacing.xl) {
-                    Text("Optimize Every Purchase")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundStyle(ModernColors.textPrimary)
-                        .multilineTextAlignment(.center)
-
-                    Text("Connect your cards to get AI-powered recommendations that maximize your rewards at every location.")
-                        .font(.body)
-                        .foregroundStyle(ModernColors.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(nil)
-                }
-
-                Button(action: {
-                    // Mock card addition - will connect real cards later
-                    withAnimation(CinematicSprings.elegant) {
-                        uiState.signIn()
-                    }
-                }) {
-                    HStack(spacing: ModernSpacing.lg) {
-                        Image(systemName: "creditcard.and.123")
-                            .font(.title3)
-                        Text("Add Cards")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                    }
-                    .foregroundStyle(.black)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, ModernSpacing.xl)
-                    .background(ModernColors.accent, in: RoundedRectangle(cornerRadius: ModernRadius.container))
-                }
-                .shadow(
-                    color: ModernColors.accent.opacity(0.3),
-                    radius: 20,
-                    x: 0,
-                    y: 8
-                )
-            }
-
-            Spacer()
-        }
-        .padding(.horizontal, ModernSpacing.huge)
-    }
-}
-
-struct SignedOutOverlay: View {
-    @Environment(UIState.self) private var uiState
-
-    var body: some View {
-        // Blurred background content
-        VStack(spacing: ModernSpacing.xxxl) {
-            PremiumEmptyState()
-        }
-        .blur(radius: 20)
-        .overlay {
-            // Sign-in overlay
-            VStack(spacing: ModernSpacing.huge) {
-                VStack(spacing: ModernSpacing.xxxl) {
-                    // App icon with glow
-                    ZStack {
-                        Circle()
-                            .fill(ModernColors.accent.opacity(0.2))
-                            .frame(width: 100, height: 100)
-                            .blur(radius: 30)
-
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 64))
-                            .foregroundStyle(ModernColors.accent)
-                    }
-
-                    VStack(spacing: ModernSpacing.xl) {
-                        Text("Welcome to Merchant")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundStyle(ModernColors.textPrimary)
-
-                        Text("AI-powered card optimization for maximum rewards")
-                            .font(.title3)
-                            .foregroundStyle(ModernColors.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-                }
-
-                VStack(spacing: ModernSpacing.lg) {
-                    Button(action: {
-                        uiState.signIn()
-                    }) {
-                        HStack(spacing: ModernSpacing.lg) {
-                            Image(systemName: "applelogo")
-                                .font(.title3)
-                            Text("Continue with Apple")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                        }
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, ModernSpacing.xl)
-                        .background(.white, in: RoundedRectangle(cornerRadius: ModernRadius.container))
-                    }
-
-                    Button(action: {
-                        uiState.signIn()
-                    }) {
-                        HStack(spacing: ModernSpacing.lg) {
-                            Image(systemName: "envelope.fill")
-                                .font(.title3)
-                            Text("Continue with Email")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                        }
-                        .foregroundStyle(ModernColors.accent)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, ModernSpacing.xl)
-                        .background(.clear)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: ModernRadius.container)
-                                .stroke(ModernColors.accent, lineWidth: 2)
-                        )
-                    }
-                }
-            }
-            .padding(.horizontal, ModernSpacing.huge)
-        }
-    }
-}
-
-// MARK: - Enhanced iOS Components
-
-struct LiveSessionPanel: View {
-    @State private var isActive = true
-    @State private var currentLocation = "Nearby"
-    @State private var sessionStart = Date()
-    @State private var timer: Timer? = nil
-    @State private var now = Date()
-    private let placeProvider = CurrentPlaceProvider()
-
-    var body: some View {
-        ModernGlassCard(style: .premium) {
-            HStack(spacing: ModernSpacing.lg) {
-                // Live indicator with pulsing animation
-                ZStack {
-                    Circle()
-                        .fill(ModernColors.success)
-                        .frame(width: 12, height: 12)
-                        .scaleEffect(isActive ? 1.2 : 1.0)
-                        .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isActive)
-
-                    Circle()
-                        .fill(ModernColors.success.opacity(0.3))
-                        .frame(width: 20, height: 20)
-                        .scaleEffect(isActive ? 1.5 : 1.0)
-                        .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: isActive)
-                }
-
-                VStack(alignment: .leading, spacing: ModernSpacing.xs) {
-                    HStack {
-                        Text("Live Session")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundStyle(ModernColors.success)
-
-                        Text("•")
-                            .foregroundStyle(ModernColors.textTertiary)
-
-                        Text(formattedDuration())
-                            .font(.caption)
-                            .foregroundStyle(ModernColors.textTertiary)
-                    }
-
-                    Text(currentLocation)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(ModernColors.textPrimary)
-                }
-
-                Spacer()
-
-                Button(action: {
-                    withAnimation(CinematicSprings.elegant) {
-                        isActive.toggle()
-                    }
-                }) {
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(ModernColors.accent)
-                        .padding(ModernSpacing.sm)
-                        .background {
-                            Circle()
-                                .fill(.ultraThinMaterial)
-                        }
-                }
-            }
-            .padding(ModernSpacing.xl)
-        }
-        .onAppear {
-            isActive = true
-            placeProvider.start { name, start in
-                currentLocation = name
-                sessionStart = start
-            }
-            timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
-                now = Date()
-            }
-        }
-        .onDisappear { timer?.invalidate(); placeProvider.stop() }
-    }
-
-    private func formattedDuration() -> String {
-        let seconds = Int(now.timeIntervalSince(sessionStart).rounded())
-        if seconds < 60 { return "<1m" }
-        let minutes = seconds / 60
-        if minutes < 60 { return "\(minutes)m" }
-        let hours = minutes / 60
-        let rem = minutes % 60
-        return "\(hours)h \(rem)m"
-    }
-}
-
-struct QuickActionsGrid: View {
-    @Environment(UIState.self) private var uiState
-    var body: some View {
-        LazyVGrid(columns: [
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-            GridItem(.flexible())
-        ], spacing: ModernSpacing.lg) {
-            QuickActionButton(
-                icon: "location.fill",
-                title: "Nearby",
-                color: ModernColors.accent
-            ).onTapGesture { uiState.showNearbyCategories = true }
-
-            QuickActionButton(
-                icon: "chart.bar.fill",
-                title: "Insights",
-                color: ModernColors.premium
-            )
-
-            Button(action: {
-                uiState.presentPlaidLink()
-            }) {
-                VStack(spacing: ModernSpacing.sm) {
-                    Image(systemName: "link")
-                        .font(.title2)
-                        .foregroundStyle(ModernColors.reward)
-                        .frame(width: 44, height: 44)
-                        .background {
-                            Circle()
-                                .fill(.ultraThinMaterial)
-                                .overlay {
-                                    Circle()
-                                        .stroke(ModernColors.reward.opacity(0.2), lineWidth: 1)
-                                }
-                        }
-
-                    Text("Connect")
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                        .foregroundStyle(ModernColors.textSecondary)
-                }
-            }
-
-            QuickActionButton(
-                icon: "gearshape.fill",
-                title: "Settings",
-                color: ModernColors.textSecondary
-            )
-        }
-    }
-}
-
-struct QuickActionButton: View {
-    let icon: String
-    let title: String
-    let color: Color
-    @State private var isPressed = false
 
     var body: some View {
         Button(action: {
-            CinematicHaptics.play(.selection)
+            action?()
         }) {
-            VStack(spacing: ModernSpacing.sm) {
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundStyle(color)
-                    .frame(width: 44, height: 44)
-                    .background {
-                        Circle()
-                            .fill(.ultraThinMaterial)
-                            .overlay {
-                                Circle()
-                                    .stroke(color.opacity(0.2), lineWidth: 1)
-                            }
-                    }
-
-                Text(title)
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .foregroundStyle(ModernColors.textSecondary)
-            }
-        }
-        .scaleEffect(isPressed ? 0.95 : 1.0)
-        .animation(CinematicSprings.immediate, value: isPressed)
-        .onLongPressGesture(minimumDuration: 0) { isPressed in
-            self.isPressed = isPressed
-        } perform: {}
-    }
-}
-
-struct WeeklySummarySection: View {
-    @State private var mostUsedCategory: String = ""
-    var body: some View {
-        VStack(spacing: ModernSpacing.xl) {
-            HStack {
-                Text("This Week")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(ModernColors.textPrimary)
-                Spacer()
-                Button("View All") { NotificationCenter.default.post(name: Notification.Name("ShowTransactionsFromHeader"), object: nil) }
-                .font(.subheadline)
-                .foregroundStyle(ModernColors.accent)
-            }
-
-            ModernGlassCard(style: .secondary) {
-                VStack(spacing: ModernSpacing.lg) {
-                    // Top metrics row
-                    HStack(spacing: ModernSpacing.lg) {
-                        WeeklyMetricTile(
-                            value: "$127",
-                            label: "Earned",
-                            color: ModernColors.success,
-                            icon: "arrow.up.circle.fill"
-                        )
-
-                        WeeklyMetricTile(
-                            value: "4.2×",
-                            label: "Avg Multiplier",
-                            color: ModernColors.premium,
-                            icon: "multiply.circle.fill"
-                        )
-                    }
-
-                    // Progress indicator
-                    VStack(alignment: .leading, spacing: ModernSpacing.sm) {
-                        HStack {
-                            Text("Optimization Score")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundStyle(ModernColors.textPrimary)
-                            Spacer()
-                            Text("92%")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(ModernColors.success)
+            CleanCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Circle()
+                        .fill(color.opacity(0.2))
+                        .frame(width: 8, height: 8)
+                    Spacer()
+                    Text(trend)
+                        .font(CopilotDesign.Typography.labelSmall)
+                        .foregroundStyle(color)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background {
+                            Capsule()
+                                .fill(color.opacity(0.1))
                         }
-
-                        ProgressView(value: 0.92)
-                            .tint(ModernColors.success)
-                            .background(ModernColors.textQuaternary.opacity(0.2))
-                        if !mostUsedCategory.isEmpty {
-                            Text("Most used: \(mostUsedCategory)")
-                                .font(.caption)
-                                .foregroundStyle(ModernColors.textTertiary)
-                        }
-                    }
                 }
-                .padding(ModernSpacing.xl)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(value)
+                        .font(CopilotDesign.Typography.numberLarge)
+                        .foregroundStyle(CopilotDesign.Colors.textPrimary)
+
+                    Text(label)
+                        .font(CopilotDesign.Typography.labelMedium)
+                        .foregroundStyle(CopilotDesign.Colors.textTertiary)
+                }
+            }
+            .padding(16)
             }
         }
-        .onAppear { updateMostUsed() }
-        .onReceive(NotificationCenter.default.publisher(for: .transactionsChanged)) { _ in updateMostUsed() }
-    }
-
-    private func updateMostUsed() {
-        let cats = TransactionStore.shared.all().map { $0.category }
-        let counts = Dictionary(grouping: cats, by: { $0 }).mapValues { $0.count }
-        mostUsedCategory = counts.max(by: { $0.value < $1.value })?.key ?? ""
+        .buttonStyle(.plain)
     }
 }
 
-struct WeeklyMetricTile: View {
-    let value: String
-    let label: String
-    let color: Color
-    let icon: String
-
-    var body: some View {
-        VStack(spacing: ModernSpacing.sm) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundStyle(color)
-                Spacer()
-            }
-
-            VStack(alignment: .leading, spacing: ModernSpacing.xs) {
-                Text(value)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(color)
-
-                Text(label)
-                    .font(.caption)
-                    .foregroundStyle(ModernColors.textTertiary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(ModernSpacing.lg)
-        .background {
-            RoundedRectangle(cornerRadius: ModernRadius.lg)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: ModernRadius.lg)
-                        .stroke(color.opacity(0.1), lineWidth: 1)
-                }
-        }
-    }
-}
-
-struct RecentActivitySection: View {
+struct ActivitySection: View {
     @Environment(UIState.self) private var uiState
+    @StateObject private var activityProvider = RecentActivityProvider()
+
     var body: some View {
-        VStack(spacing: ModernSpacing.xl) {
+        VStack(spacing: 16) {
             HStack {
                 Text("Recent Activity")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(ModernColors.textPrimary)
+                    .font(CopilotDesign.Typography.headlineMedium)
+                    .foregroundStyle(CopilotDesign.Colors.textPrimary)
                 Spacer()
-                Button(action: { uiState.showAddSpendSheet = true }) {
-                    Image(systemName: "plus.circle.fill")
+                HStack(spacing: 8) {
+                    Button(action: {
+                        uiState.showAddSpendSheet = true
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 12, weight: .medium))
+                            Text("Add")
+                                .font(CopilotDesign.Typography.labelSmall)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundStyle(CopilotDesign.Colors.success)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background {
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(CopilotDesign.Colors.success.opacity(0.1))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .strokeBorder(CopilotDesign.Colors.success.opacity(0.2), lineWidth: 1)
+                                }
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: {
+                        uiState.showTransactionsSheet = true
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "list.bullet")
+                                .font(.system(size: 12, weight: .medium))
+                            Text("View All")
+                                .font(CopilotDesign.Typography.labelSmall)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundStyle(CopilotDesign.Colors.info)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background {
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(CopilotDesign.Colors.info.opacity(0.1))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .strokeBorder(CopilotDesign.Colors.info.opacity(0.2), lineWidth: 1)
+                                }
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
             }
 
-            VStack(spacing: ModernSpacing.md) {
-                ActivityRow(
-                    merchant: "Starbucks Coffee",
-                    amount: "$4.25",
-                    points: "+13 pts",
-                    time: "2h ago",
-                    category: .dining
-                )
-
-                ActivityRow(
-                    merchant: "Shell Gas Station",
-                    amount: "$45.20",
-                    points: "+90 pts",
-                    time: "1d ago",
-                    category: .gas
-                )
-
-                ActivityRow(
-                    merchant: "Whole Foods Market",
-                    amount: "$87.50",
-                    points: "+175 pts",
-                    time: "2d ago",
-                    category: .groceries
-                )
+            VStack(spacing: 12) {
+                ForEach(Array(activityProvider.activities.prefix(3))) { activity in
+                    CleanActivityRow(
+                        merchant: activity.merchant,
+                        amount: activity.formattedAmount,
+                        points: activity.formattedPoints,
+                        category: activity.category.displayName,
+                        time: activity.formattedTime
+                    )
+                }
             }
         }
     }
 }
 
-struct ActivityRow: View {
+struct CleanActivityRow: View {
     let merchant: String
     let amount: String
     let points: String
+    let category: String
     let time: String
-    let category: PurchaseCategory
 
     var body: some View {
-        ModernGlassCard(style: .secondary) {
-            HStack(spacing: ModernSpacing.lg) {
+        CleanCard(style: .flat) {
+            HStack(spacing: 16) {
                 // Category icon
-                Image(systemName: categoryIcon(for: category))
-                    .font(.title3)
-                    .foregroundStyle(ModernColors.purchaseContextColor(for: category))
+                Circle()
+                    .fill(categoryColor.opacity(0.2))
                     .frame(width: 40, height: 40)
-                    .background {
-                        Circle()
-                            .fill(.ultraThinMaterial)
-                            .overlay {
-                                Circle()
-                                    .stroke(ModernColors.purchaseContextColor(for: category).opacity(0.2), lineWidth: 1)
-                            }
+                    .overlay {
+                        Image(systemName: categoryIcon)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(categoryColor)
                     }
 
-                VStack(alignment: .leading, spacing: ModernSpacing.xs) {
+                // Details
+                VStack(alignment: .leading, spacing: 4) {
                     Text(merchant)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(ModernColors.textPrimary)
+                        .font(CopilotDesign.Typography.bodyMedium)
+                        .foregroundStyle(CopilotDesign.Colors.textPrimary)
 
-                    Text(time)
-                        .font(.caption)
-                        .foregroundStyle(ModernColors.textTertiary)
+                    Text("\(category) • \(time)")
+                        .font(CopilotDesign.Typography.labelSmall)
+                        .foregroundStyle(CopilotDesign.Colors.textTertiary)
                 }
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: ModernSpacing.xs) {
+                // Amount and points
+                VStack(alignment: .trailing, spacing: 4) {
                     Text(amount)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(ModernColors.textPrimary)
+                        .font(CopilotDesign.Typography.numberSmall)
+                        .foregroundStyle(CopilotDesign.Colors.textPrimary)
 
                     Text(points)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundStyle(ModernColors.success)
+                        .font(CopilotDesign.Typography.labelSmall)
+                        .foregroundStyle(CopilotDesign.Colors.success)
                 }
             }
-            .padding(ModernSpacing.lg)
+            .padding(16)
         }
     }
 
-    private func categoryIcon(for category: PurchaseCategory) -> String {
-        switch category {
-        case .dining: return "fork.knife"
-        case .groceries: return "cart.fill"
-        case .gas: return "fuelpump.fill"
-        case .travel: return "airplane"
-        case .shopping: return "bag.fill"
-        case .utilities: return "house.fill"
-        case .other: return "ellipsis.circle.fill"
+    private var categoryIcon: String {
+        switch category.lowercased() {
+        case "dining": return "fork.knife.circle.fill"
+        case "gas": return "fuelpump.fill"
+        case "groceries": return "cart.fill"
+        default: return "creditcard.fill"
+        }
+    }
+
+    private var categoryColor: Color {
+        switch category.lowercased() {
+        case "dining": return CopilotDesign.Colors.brandOrange
+        case "gas": return CopilotDesign.Colors.brandBlue
+        case "groceries": return CopilotDesign.Colors.brandGreen
+        default: return CopilotDesign.Colors.accent
         }
     }
 }
 
-#Preview("Signed Out") {
+// MARK: - Rotating Cards Stack
+
+struct RotatingCardsStack: View {
+    let cards: [CardUI]
+    @State private var currentIndex = 0
+    @State private var isRotating = false
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
+                    RotatingCardView(
+                        card: card,
+                        index: index,
+                        currentIndex: currentIndex,
+                        totalCards: cards.count
+                    )
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                            rotateToNext()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func rotateToNext() {
+        guard !cards.isEmpty else { return }
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+
+        currentIndex = (currentIndex + 1) % cards.count
+    }
+
+    private func rotateToPrevious() {
+        guard !cards.isEmpty else { return }
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+
+        currentIndex = (currentIndex - 1 + cards.count) % cards.count
+    }
+}
+
+struct RotatingCardView: View {
+    let card: CardUI
+    let index: Int
+    let currentIndex: Int
+    let totalCards: Int
+
+    private var cardOffset: CGFloat {
+        let relativeIndex = (index - currentIndex + totalCards) % totalCards
+        return CGFloat(relativeIndex) * 20 - 40
+    }
+
+    private var cardScale: CGFloat {
+        let relativeIndex = (index - currentIndex + totalCards) % totalCards
+        if relativeIndex == 0 {
+            return 1.0
+        } else {
+            return 0.9 + CGFloat(3 - relativeIndex) * 0.03
+        }
+    }
+
+    private var cardOpacity: Double {
+        let relativeIndex = (index - currentIndex + totalCards) % totalCards
+        if relativeIndex <= 2 {
+            return 1.0 - Double(relativeIndex) * 0.3
+        } else {
+            return 0.1
+        }
+    }
+
+    private var cardRotation: Double {
+        let relativeIndex = (index - currentIndex + totalCards) % totalCards
+        return Double(relativeIndex) * 5.0
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HighQualityAsyncImage(url: card.artURL, contentMode: .fit, cornerRadius: 16) {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(CopilotDesign.Colors.surface2)
+                    .overlay {
+                        VStack {
+                            Image(systemName: "creditcard.fill")
+                                .font(.system(size: 40))
+                                .foregroundStyle(CopilotDesign.Colors.textTertiary)
+
+                            Text(card.productName)
+                                .font(CopilotDesign.Typography.labelMedium)
+                                .foregroundStyle(CopilotDesign.Colors.textTertiary)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+            }
+            .frame(height: 180)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .shadow(
+                color: Color.black.opacity(0.1),
+                radius: 10,
+                x: 0,
+                y: 5
+            )
+
+            if index == currentIndex {
+                VStack(spacing: 4) {
+                    Text(card.productName)
+                        .font(CopilotDesign.Typography.bodyMedium)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(CopilotDesign.Colors.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+
+                    Text("•••• \(card.last4)")
+                        .font(CopilotDesign.Typography.labelSmall)
+                        .foregroundStyle(CopilotDesign.Colors.textTertiary)
+                }
+                .transition(.opacity.combined(with: .scale))
+            }
+        }
+        .offset(x: cardOffset, y: 0)
+        .scaleEffect(cardScale)
+        .opacity(cardOpacity)
+        .rotation3DEffect(
+            .degrees(cardRotation),
+            axis: (x: 0, y: 1, z: 0)
+        )
+        .zIndex(index == currentIndex ? 1000 : Double(1000 - index))
+    }
+}
+
+#Preview {
     HomeView()
         .environment(UIState())
-}
-
-#Preview("Signed In") {
-    let uiState = UIState()
-    uiState.isSignedIn = true
-
-    return HomeView()
-        .environment(uiState)
+        .environment(SelectedCardsStore.shared)
+        .environment(UserProfileStore.shared)
 }

@@ -17,6 +17,7 @@ public enum VenueCategory {
 
 public protocol NearbyCategoryDetecting {
     func classify(visit: CLVisit) async -> VenueCategory
+    func detect(visit: CLVisit) async -> (VenueCategory, String?)
 }
 
 public final class NearbyCategoryDetector: NearbyCategoryDetecting {
@@ -42,6 +43,23 @@ public final class NearbyCategoryDetector: NearbyCategoryDetecting {
         return .other
     }
 
+    public func detect(visit: CLVisit) async -> (VenueCategory, String?) {
+        let coord = CLLocationCoordinate2D(latitude: visit.coordinate.latitude, longitude: visit.coordinate.longitude)
+        let region = MKCoordinateRegion(center: coord, latitudinalMeters: 400, longitudinalMeters: 400)
+
+        if let name = await nearestName(query: "coffee", region: region) { return (.coffee, name) }
+        if let name = await nearestName(query: "restaurant", region: region) { return (.restaurant, name) }
+        let grocery = await nearestName(query: "grocery", region: region)
+        if let name = grocery { return (.groceries, name) }
+        let supermarket = await nearestName(query: "supermarket", region: region)
+        if let name = supermarket { return (.groceries, name) }
+        let gas = await nearestName(query: "gas", region: region)
+        if let name = gas { return (.gas, name) }
+        let fuel = await nearestName(query: "fuel", region: region)
+        if let name = fuel { return (.gas, name) }
+        return (.other, nil)
+    }
+
     private func hasPOI(query: String, region: MKCoordinateRegion) async -> Bool {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
@@ -52,6 +70,18 @@ public final class NearbyCategoryDetector: NearbyCategoryDetecting {
             let response = try await search.start()
             return !response.mapItems.isEmpty
         } catch { return false }
+    }
+
+    private func nearestName(query: String, region: MKCoordinateRegion) async -> String? {
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        request.resultTypes = .pointOfInterest
+        request.region = region
+        let search = MKLocalSearch(request: request)
+        do {
+            let response = try await search.start()
+            return response.mapItems.first?.name
+        } catch { return nil }
     }
 }
 

@@ -4,7 +4,7 @@
 
 import SwiftUI
 
-extension SignedInHomeView {
+extension HomeView {
     func triggerOnboardingIfNeeded(_ uiState: UIState) {
         uiState.presentCardPickerIfNeeded()
     }

@@ -24,12 +24,15 @@ public final class NotificationService: NotificationServicing {
     private let rateLimitInterval: TimeInterval = 60 * 60 // 1 hour per venue
     private let storageKeyPrefix = "notif_last_venue_"
     private let auditKey = "notif_audit_log"
+    private let categoryIdentifier = "MERCHANT_SUGGESTION"
+    static let openWalletActionId = "OPEN_WALLET"
 
     public init() {}
 
     public func requestAuthorization() async -> Bool {
         do {
-            let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge, .timeSensitive])
+            let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
+            registerCategories()
             return granted
         } catch { return false }
     }
@@ -39,6 +42,7 @@ public final class NotificationService: NotificationServicing {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
+        content.categoryIdentifier = categoryIdentifier
         content.sound = .default
         content.interruptionLevel = .timeSensitive
 
@@ -51,6 +55,21 @@ public final class NotificationService: NotificationServicing {
         } catch {
             // swallow; local only
         }
+    }
+
+    private func registerCategories() {
+        let openWallet = UNNotificationAction(
+            identifier: Self.openWalletActionId,
+            title: "Open Wallet",
+            options: [.foreground]
+        )
+        let category = UNNotificationCategory(
+            identifier: categoryIdentifier,
+            actions: [openWallet],
+            intentIdentifiers: [],
+            options: []
+        )
+        center.setNotificationCategories([category])
     }
 
     private func isAllowed(venueKey: String) async -> Bool {

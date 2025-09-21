@@ -16,6 +16,10 @@ final class UIState {
     var showTransactionsSheet = false
     var showAccountSheet = false
     var showAddSpendSheet = false
+    var showNearbySheet = false
+    var showNotificationSettings = false
+    var showOptimizationBreakdown = false
+    var showSettingsSheet = false
 
     func signIn() {
         isSignedIn = true

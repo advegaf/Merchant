@@ -14,25 +14,41 @@ struct NearbyCategoriesSheet: View {
     private let locator = CLLocationManager()
 
     var body: some View {
-        NavigationStack {
-            List {
-                ForEach(categories) { bucket in
-                    Button {
-                        Task { await choose(bucket) }
-                    } label: {
-                        HStack {
-                            Text(bucket.name)
-                            Spacer()
-                            Text("\(bucket.count)")
-                                .foregroundStyle(.secondary)
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Page Title
+                    HStack {
+                        Text("Nearby Categories")
+                            .font(CopilotDesign.Typography.displayMedium)
+                            .foregroundStyle(CopilotDesign.Colors.textPrimary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+
+                    // Categories List
+                    LazyVStack(spacing: 12) {
+                        ForEach(categories) { bucket in
+                            CategoryRow(bucket: bucket) {
+                                Task { await choose(bucket) }
+                            }
                         }
                     }
+                    .padding(.horizontal, 20)
+
+                    Spacer(minLength: 50)
                 }
             }
-            .navigationTitle("Nearby Categories")
+            .background(.ultraThinMaterial)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }
+                    CleanButton("Done", style: .glass, size: .small) {
+                        let h = UIImpactFeedbackGenerator(style: .light)
+                        h.impactOccurred()
+                        withAnimation(.easeInOut(duration: 0.2)) { dismiss() }
+                    }
                 }
             }
         }
@@ -76,6 +92,62 @@ struct NearbyCategoriesSheet: View {
         #if canImport(UIKit)
         UIApplication.shared.open(url)
         #endif
+    }
+}
+
+struct CategoryRow: View {
+    let bucket: NearbyCategoryBucket
+    let action: () -> Void
+
+    var body: some View {
+        CleanCard(style: .flat) {
+            Button(action: action) {
+                HStack(spacing: 16) {
+                    // Category Icon
+                    Circle()
+                        .fill(CopilotDesign.Colors.accent.opacity(0.1))
+                        .frame(width: 40, height: 40)
+                        .overlay {
+                            Image(systemName: "location.circle.fill")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(CopilotDesign.Colors.accent)
+                        }
+
+                    // Category Details
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(bucket.name)
+                            .font(CopilotDesign.Typography.bodyMedium)
+                            .fontWeight(.medium)
+                            .foregroundStyle(CopilotDesign.Colors.textPrimary)
+
+                        Text("Nearby locations")
+                            .font(CopilotDesign.Typography.labelSmall)
+                            .foregroundStyle(CopilotDesign.Colors.textTertiary)
+                    }
+
+                    Spacer()
+
+                    // Count Badge
+                    Text("\(bucket.count)")
+                        .font(CopilotDesign.Typography.labelMedium)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(CopilotDesign.Colors.accent)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background {
+                            Capsule()
+                                .fill(CopilotDesign.Colors.accent.opacity(0.1))
+                        }
+
+                    // Chevron
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(CopilotDesign.Colors.textTertiary)
+                }
+                .padding(16)
+            }
+            .buttonStyle(.plain)
+        }
     }
 }
 

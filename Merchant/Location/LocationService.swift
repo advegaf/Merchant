@@ -8,8 +8,8 @@ import CoreLocation
 
 @MainActor
 public protocol LocationServicing: AnyObject {
-    func requestAuthorization()
-    func start()
+    func requestAuthorization() async
+    func start() async
     func stop()
     var onVisit: ((CLVisit) -> Void)? { get set }
 }
@@ -19,6 +19,8 @@ public final class LocationService: NSObject, LocationServicing {
     private let manager: CLLocationManager
     public var onVisit: ((CLVisit) -> Void)?
     private var shouldMonitorVisits = false
+    private var authorizationContinuation: CheckedContinuation<CLAuthorizationStatus, Never>?
+    // Removed startContinuation; we start strictly from authorization delegate
 
     public override init() {
         self.manager = CLLocationManager()
@@ -30,17 +32,23 @@ public final class LocationService: NSObject, LocationServicing {
         self.manager.activityType = .other
     }
 
-    public func requestAuthorization() {
+    public func requestAuthorization() async {
         // Guard missing plist keys to avoid runtime crash/blank screen
         let hasWhenInUse = Bundle.main.object(forInfoDictionaryKey: "NSLocationWhenInUseUsageDescription") != nil
         guard hasWhenInUse else { return }
-        manager.requestWhenInUseAuthorization()
+
+        // Request authorization and wait for delegate callback without querying status synchronously
+        let _ = await withCheckedContinuation { continuation in
+            self.authorizationContinuation = continuation
+            manager.requestWhenInUseAuthorization()
+        }
     }
 
-    public func start() {
+    public func start() async {
         guard CLLocationManager.locationServicesEnabled() else { return }
         shouldMonitorVisits = true
-        handleAuthorizationChange(manager.authorizationStatus)
+        // Kick off auth flow to ensure we get a delegate callback; no synchronous status reads
+        manager.requestWhenInUseAuthorization()
     }
 
     public func stop() {
@@ -53,8 +61,18 @@ extension LocationService: CLLocationManagerDelegate {
     public func locationManager(_ manager: CLLocationManager, didVisit visit: CLVisit) {
         onVisit?(visit)
     }
+
     public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        handleAuthorizationChange(manager.authorizationStatus)
+        let status = manager.authorizationStatus
+        handleAuthorizationChange(status)
+
+        // Resume any waiting authorization continuation
+        if let continuation = authorizationContinuation {
+            authorizationContinuation = nil
+            continuation.resume(returning: status)
+        }
+
+        // No-op: start continuation removed; start is driven entirely by delegate now
     }
 }
 
@@ -65,8 +83,8 @@ private extension LocationService {
             guard shouldMonitorVisits else { return }
             manager.startMonitoringVisits()
         case .notDetermined:
-            // Request will prompt; actual start happens via delegate callback
-            requestAuthorization()
+            // Authorization will be requested via async method
+            break
         default:
             manager.stopMonitoringVisits()
         }
@@ -78,7 +96,7 @@ private extension LocationService {
 public final class StubLocationService: LocationServicing {
     public var onVisit: ((CLVisit) -> Void)?
     public init() {}
-    public func requestAuthorization() {}
-    public func start() {}
+    public func requestAuthorization() async {}
+    public func start() async {}
     public func stop() {}
 }

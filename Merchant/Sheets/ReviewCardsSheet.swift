@@ -48,7 +48,7 @@ struct ReviewCardsSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    CleanButton("Done", style: .glass, size: .small) {
                         dismiss()
                     }
                 }

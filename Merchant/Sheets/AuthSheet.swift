@@ -76,10 +76,9 @@ struct AuthSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Cancel") {
+                    CleanButton("Cancel", style: .glass, size: .small) {
                         dismiss()
                     }
-                    .foregroundStyle(.secondary)
                 }
             }
         }

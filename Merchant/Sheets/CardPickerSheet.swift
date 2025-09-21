@@ -10,20 +10,43 @@ struct CardPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var allCards: [CardUI] = []
     @State private var provider = MockCardArtProvider()
+    @State private var showCapacityHint = false
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 16)], spacing: 16) {
+                VStack(spacing: 20) {
+                    // Page Title
+                    HStack {
+                        Text("Choose Your Cards")
+                            .font(CopilotDesign.Typography.displayMedium)
+                            .foregroundStyle(CopilotDesign.Colors.textPrimary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+
+                    if store.isAtCapacity {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(CopilotDesign.Colors.warning)
+                            Text("You can select up to \(SelectedCardsStore.maxSelectedCards) cards.")
+                                .font(CopilotDesign.Typography.labelSmall)
+                                .foregroundStyle(CopilotDesign.Colors.textSecondary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 20)
+                        .transition(.opacity)
+                        .opacity(showCapacityHint ? 1 : 0.8)
+                    }
+
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 16)], spacing: 16) {
                     ForEach(allCards) { card in
                         VStack(spacing: 8) {
-                            AsyncImage(url: card.artURL) { image in
-                                image.resizable().scaledToFit()
-                            } placeholder: {
+                            HighQualityAsyncImage(url: card.artURL, contentMode: .fit, cornerRadius: 12) {
                                 Rectangle().fill(.ultraThinMaterial)
                             }
                             .frame(height: 90)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
 
                             Text(card.productName)
                                 .font(.caption)
@@ -46,17 +69,37 @@ struct CardPickerSheet: View {
                                         .stroke(store.isSelected(card.selectionKey) ? .green : .clear, lineWidth: 2)
                                 )
                         )
-                        .onTapGesture { store.toggleSelection(for: card.selectionKey) }
+                        .overlay(alignment: .topTrailing) {
+                            if !store.isSelected(card.selectionKey) && store.isAtCapacity {
+                                Text("Max")
+                                    .font(CopilotDesign.Typography.labelSmall)
+                                    .foregroundStyle(CopilotDesign.Colors.textTertiary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background { Capsule().fill(CopilotDesign.Colors.surface2) }
+                                    .padding(6)
+                            }
+                        }
+                        .onTapGesture { handleTap(for: card) }
+                        .accessibilityAddTraits(store.isSelected(card.selectionKey) ? [.isSelected] : [])
+                        .accessibilityLabel(card.productName)
+                        .accessibilityHint(store.isSelected(card.selectionKey) ? "Deselect card" : (store.isAtCapacity ? "Maximum selected" : "Select card"))
                     }
+                    }
+                    .padding(.horizontal, 20)
+
+                    Spacer(minLength: 50)
                 }
-                .padding(16)
             }
-            .navigationTitle("Choose Your Cards")
+            .background(.ultraThinMaterial)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    CleanButton("Done", style: .glass, size: .small) {
+                        let h = UIImpactFeedbackGenerator(style: .light)
+                        h.impactOccurred()
                         store.hasCompletedOnboarding = true
-                        dismiss()
+                        withAnimation(.easeInOut(duration: 0.2)) { dismiss() }
                     }
                 }
             }
@@ -66,6 +109,28 @@ struct CardPickerSheet: View {
                 allCards = await provider.fetchCardsForReview()
             }
         }
+    }
+
+    private func handleTap(for card: CardUI) {
+        let key = card.selectionKey
+        if store.isSelected(key) {
+            store.toggleSelection(for: key)
+            return
+        }
+        guard !store.isAtCapacity else {
+            let notif = UINotificationFeedbackGenerator()
+            notif.notificationOccurred(.error)
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showCapacityHint = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                withAnimation(.easeInOut(duration: 0.2)) { showCapacityHint = false }
+            }
+            return
+        }
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+        store.toggleSelection(for: key)
     }
 }
 

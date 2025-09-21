@@ -62,9 +62,7 @@ struct PlaidLinkSheet: View {
                     }
                     .disabled(isLaunching)
 
-                    Button("Cancel") { dismiss() }
-                        .font(.subheadline)
-                        .foregroundStyle(ModernColors.textSecondary)
+                    CleanButton("Cancel", style: .glass, size: .small) { dismiss() }
                 }
             }
             .padding(ModernSpacing.xl)
@@ -72,13 +70,13 @@ struct PlaidLinkSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    CleanButton("Done", style: .glass, size: .small) {
                         dismiss()
                     }
                 }
             }
         }
-        .background(ModernBackground())
+        .background(.ultraThinMaterial)
         .alert(viewModel.errorMessage ?? "", isPresented: Binding(
             get: { viewModel.hasError },
             set: { _ in viewModel.hasError = false }
@@ -91,7 +89,7 @@ struct PlaidLinkSheet: View {
         isLaunching = true
         defer { isLaunching = false }
         do {
-            var vm = viewModel
+            let vm = viewModel
             let success = try await vm.beginLinkFlow()
             if success {
                 uiState.dismissPlaidLink()

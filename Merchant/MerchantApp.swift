@@ -16,6 +16,9 @@ struct MerchantApp: App {
         WindowGroup {
             RootView()
                 .environment(uiState)
+                .environment(NotificationPreferencesStore.shared)
+                .environment(SelectedCardsStore.shared)
+                .environment(UserProfileStore.shared)
                 .preferredColorScheme(.dark)
                 .task {
                     // Wire location → detector → notifications
@@ -25,8 +28,8 @@ struct MerchantApp: App {
                     let orch = VisitNotificationOrchestrator(locationService: location, detector: detector, notifier: notifier)
                     orchestrator = orch
                     if PrivacyKeys.hasLocationWhenInUse {
-                        location.requestAuthorization()
-                        orch.start()
+                        await location.requestAuthorization()
+                        await orch.start()
                     }
 
                     // Start geofencing for near-instant entry alerts

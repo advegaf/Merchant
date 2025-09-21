@@ -179,7 +179,7 @@ final class AdvancedGestureController: ObservableObject {
 
         // Calculate physics-based settle position
         let decelerationRate: CGFloat = 0.95
-        let projectedDistance = velocity.width * 0.3 * decelerationRate
+        let _ = velocity.width * 0.3 * decelerationRate
 
         // Trigger settling animation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -236,10 +236,10 @@ struct PhysicsAwareModifier: ViewModifier {
                         )
 
                         // Physics-based return animation
-                        let velocity = value.velocity
-                        let mass: CGFloat = 1.0
-                        let stiffness: CGFloat = 300
-                        let damping: CGFloat = 25
+                        let _ = value.velocity
+                        let _: CGFloat = 1.0
+                        let _: CGFloat = 300
+                        let _: CGFloat = 25
 
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                             dragOffset = .zero

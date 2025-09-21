@@ -11,6 +11,9 @@ struct RootView: View {
     var body: some View {
         NavigationStack {
             HomeView()
+                .environment(SelectedCardsStore.shared)
+                .environment(UserProfileStore.shared)
+                .environment(NotificationPreferencesStore.shared)
                 .sheet(isPresented: .constant(uiState.showAuthSheet)) {
                     AuthSheet()
                 }
@@ -30,6 +33,8 @@ struct RootView: View {
                 ) {
                     CardPickerSheet()
                         .environment(SelectedCardsStore.shared)
+                        .environment(NotificationPreferencesStore.shared)
+                        .environment(UserProfileStore.shared)
                 }
                 .sheet(
                     isPresented: Binding(

@@ -11,13 +11,15 @@ public struct TransactionRecord: Identifiable, Codable {
     public let amount: Double
     public let category: String // Use PurchaseCategory.rawValue if available
     public let date: Date
+    public let cardUsed: String?
 
-    public init(id: UUID = UUID(), merchant: String, amount: Double, category: String, date: Date = Date()) {
+    public init(id: UUID = UUID(), merchant: String, amount: Double, category: String, date: Date = Date(), cardUsed: String? = nil) {
         self.id = id
         self.merchant = merchant
         self.amount = amount
         self.category = category
         self.date = date
+        self.cardUsed = cardUsed
     }
 }
 
@@ -35,6 +37,12 @@ public final class TransactionStore {
     }
 
     public func all() -> [TransactionRecord] { records }
+
+    public func clear() {
+        records.removeAll()
+        save()
+        notifyChanged()
+    }
 
     private func save() {
         if let data = try? JSONEncoder().encode(records) {

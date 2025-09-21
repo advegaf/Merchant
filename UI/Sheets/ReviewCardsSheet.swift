@@ -87,11 +87,9 @@ struct ReviewCardsSheet: View {
                         }
                         .disabled(selectedCards.isEmpty || isLoading)
 
-                        Button("Cancel") {
+                        CleanButton("Cancel", style: .glass, size: .small) {
                             dismiss()
                         }
-                        .font(.body)
-                        .foregroundStyle(.secondary)
                     }
                     .padding(ThemeSpacing.xl)
                 }
@@ -103,10 +101,9 @@ struct ReviewCardsSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    CleanButton("Done", style: .glass, size: .small) {
                         dismiss()
                     }
-                    .foregroundStyle(ThemeColor.primaryNeon)
                 }
             }
         }

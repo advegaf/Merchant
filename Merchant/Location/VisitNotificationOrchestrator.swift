@@ -22,10 +22,10 @@ public final class VisitNotificationOrchestrator {
         }
     }
 
-    public func start() {
+    public func start() async {
         guard FeatureFlags.PlaidSync else { return }
-        Task { _ = await notifier.requestAuthorization() }
-        locationService.start()
+        _ = await notifier.requestAuthorization()
+        await locationService.start()
     }
 
     private func venueKey(for visit: CLVisit) -> String {
@@ -42,14 +42,9 @@ public final class VisitNotificationOrchestrator {
         }
     }
 
-    private func reason(for category: VenueCategory) -> String {
-        switch category {
-        case .restaurant: return "3× on dining"
-        case .coffee: return "3× on dining"
-        case .groceries: return "6% on groceries"
-        case .gas: return "5% on gas"
-        case .other: return "1.5× everywhere"
-        }
+    private func reason(for category: VenueCategory, cards: [CardUI]) -> String {
+        let (_, why) = SimpleRulesEngine.recommend(for: String(describing: category), from: cards)
+        return why
     }
 
     private func title(for category: VenueCategory) -> String {
@@ -74,20 +69,36 @@ public final class VisitNotificationOrchestrator {
     }
 
     private func handle(visit: CLVisit) async {
-        let category = await detector.classify(visit: visit)
+        let (category, placeName) = await detector.detect(visit: visit)
+        let prefs = NotificationPreferencesStore.shared
+        guard prefs.enabled else { return }
         // Gate: only notify for key venue categories
         switch category {
-        case .restaurant, .coffee, .groceries, .gas:
-            break
+        case .restaurant:
+            guard prefs.restaurants else { return }
+        case .coffee:
+            guard prefs.coffee else { return }
+        case .groceries:
+            guard prefs.groceries else { return }
+        case .gas:
+            guard prefs.gas else { return }
         case .other:
             return
         }
         let venue = venueKey(for: visit)
-        let title = title(for: category)
-        let body = body(for: category)
-        let reason = reason(for: category)
-        await notifier.scheduleSuggestion(title: title, body: body, venueKey: venue, reason: reason)
+        let title = "Hey \(UserProfileStore.shared.displayName) — you're at \(placeName ?? title(for: category))"
+        let all = await MockCardArtProvider().fetchCardsForReview()
+        let selected = SelectedCardsStore.shared.selectedKeys
+        let cards = selected.isEmpty ? all : all.filter { selected.contains($0.selectionKey) }
+        let (card, why) = SimpleRulesEngine.recommend(for: String(describing: category), from: cards)
+        let body: String
+        if let card {
+            body = "Best card to use is \(card.productName) — \(why). Tap to open Wallet."
+        } else {
+            body = self.body(for: category)
+        }
+        let reasonText = reason(for: category, cards: cards)
+        await notifier.scheduleSuggestion(title: title, body: body, venueKey: venue, reason: reasonText)
     }
 }
-
 

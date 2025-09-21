@@ -21,6 +21,15 @@ enum FeatureFlags {
         return true
         #endif
     }
+
+	// Enable lighter animations and stricter image validation for demos/presentations
+	static var DemoPerformanceMode: Bool {
+		#if DEBUG
+		return true
+		#else
+		return true
+		#endif
+	}
 }
 
 

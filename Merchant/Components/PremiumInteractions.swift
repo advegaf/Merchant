@@ -4,6 +4,133 @@
 // Constraints: 60fps performance, accessibility support, premium feel
 
 import SwiftUI
+import UIKit
+import ImageIO
+import UniformTypeIdentifiers
+
+// MARK: - High Quality Async Image Loader
+
+struct HighQualityAsyncImage: View {
+    let url: URL
+    let contentMode: ContentMode
+    let cornerRadius: CGFloat?
+    let placeholder: AnyView
+
+    @State private var image: UIImage?
+    @State private var isLoading = false
+
+    init(url: URL, contentMode: ContentMode = .fit, cornerRadius: CGFloat? = nil, @ViewBuilder placeholder: () -> some View) {
+        self.url = url
+        self.contentMode = contentMode
+        self.cornerRadius = cornerRadius
+        self.placeholder = AnyView(placeholder())
+    }
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .interpolation(.high)
+                    .renderingMode(.original)
+                    .aspectRatio(contentMode: contentMode)
+            } else {
+                placeholder
+            }
+        }
+        .onAppear(perform: load)
+        .clipShape(cornerRadius != nil ? AnyShape(RoundedRectangle(cornerRadius: cornerRadius!, style: .continuous)) : AnyShape(Rectangle()))
+    }
+
+    private func load() {
+        guard !isLoading else { return }
+        isLoading = true
+
+        Task.detached(priority: .userInitiated) {
+            var request = URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad, timeoutInterval: 20)
+            request.setValue("image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8,*/*;q=0.5", forHTTPHeaderField: "Accept")
+            request.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
+            if let referer = refererFor(url: url) {
+                request.setValue(referer, forHTTPHeaderField: "Referer")
+                if let origin = originFor(referer: referer) {
+                    request.setValue(origin, forHTTPHeaderField: "Origin")
+                }
+            }
+
+            if let cached = URLCache.shared.cachedResponse(for: request)?.data,
+               let image = downsample(data: cached, to: CGSize(width: 1200, height: 1200), scale: UIScreen.main.scale) {
+                await MainActor.run { self.image = image; self.isLoading = false }
+                return
+            }
+
+            do {
+                let (data, response) = try await URLSession.shared.data(for: request)
+                if let response = response as? HTTPURLResponse, response.statusCode == 200 {
+                    let cached = CachedURLResponse(response: response, data: data)
+                    URLCache.shared.storeCachedResponse(cached, for: request)
+                    if let img = downsample(data: data, to: CGSize(width: 1200, height: 1200), scale: UIScreen.main.scale) {
+                        await MainActor.run { self.image = img; self.isLoading = false }
+                        return
+                    }
+                }
+
+                // Retry without custom headers (some CDNs block header patterns)
+                let plainRequest = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 20)
+                let (data2, response2) = try await URLSession.shared.data(for: plainRequest)
+                if let response2 = response2 as? HTTPURLResponse, response2.statusCode == 200,
+                   let img2 = downsample(data: data2, to: CGSize(width: 1200, height: 1200), scale: UIScreen.main.scale) {
+                    let cached2 = CachedURLResponse(response: response2, data: data2)
+                    URLCache.shared.storeCachedResponse(cached2, for: request)
+                    await MainActor.run { self.image = img2 }
+                }
+            } catch {
+                // Ignore; placeholder will remain
+            }
+            await MainActor.run { self.isLoading = false }
+        }
+    }
+}
+
+private func downsample(data: Data, to pointSize: CGSize, scale: CGFloat) -> UIImage? {
+    let maxDimensionInPixels = max(pointSize.width, pointSize.height) * scale
+    let options: [CFString: Any] = [
+        kCGImageSourceShouldCache: false
+    ]
+    guard let source = CGImageSourceCreateWithData(data as CFData, options as CFDictionary) else { return UIImage(data: data) }
+    let downsampleOptions: [CFString: Any] = [
+        kCGImageSourceCreateThumbnailFromImageAlways: true,
+        kCGImageSourceShouldCacheImmediately: true,
+        kCGImageSourceCreateThumbnailWithTransform: true,
+        kCGImageSourceThumbnailMaxPixelSize: maxDimensionInPixels
+    ]
+    guard let cg = CGImageSourceCreateThumbnailAtIndex(source, 0, downsampleOptions as CFDictionary) else { return UIImage(data: data) }
+    return UIImage(cgImage: cg)
+}
+
+private func refererFor(url: URL) -> String? {
+    guard let host = url.host else { return nil }
+    if host.contains("chase.com") { return "https://creditcards.chase.com/" }
+    if host.contains("capitalone.com") { return "https://www.capitalone.com/credit-cards/" }
+    if host.contains("citi.com") { return "https://www.citi.com/credit-cards/" }
+    if host.contains("wellsfargo.com") { return "https://www.wellsfargo.com/credit-cards/" }
+    if host.contains("discover.com") { return "https://www.discover.com/credit-cards/" }
+    if host.contains("bankofamerica.com") { return "https://www.bankofamerica.com/credit-cards/" }
+    if host.contains("usbank.com") { return "https://www.usbank.com/credit-cards.html" }
+    if host.contains("aexp-static.com") || host.contains("americanexpress.com") { return "https://www.americanexpress.com/" }
+    return nil
+}
+
+private func originFor(referer: String) -> String? {
+    guard let url = URL(string: referer), let scheme = url.scheme, let host = url.host else { return nil }
+    return "\(scheme)://\(host)"
+}
+
+// Type erasure for clipShape switch
+struct AnyShape: Shape {
+    private let pathClosure: @Sendable (CGRect) -> Path
+    init<S: Shape>(_ shape: S) { self.pathClosure = { rect in shape.path(in: rect) } }
+    func path(in rect: CGRect) -> Path { pathClosure(rect) }
+}
 
 /// Premium interactive components that elevate the user experience
 struct PremiumInteractions {
@@ -18,7 +145,7 @@ struct PremiumInteractions {
 
         var body: some View {
             HStack(spacing: 0) {
-                ForEach(Array(options.enumerated()), id: \.offset) { index, option in
+                ForEach(Array(options.enumerated()), id: \ .offset) { index, option in
                     Button(action: {
                         withAnimation(PremiumDesign.Animations.responsiveSpring) {
                             selectedIndex = index
@@ -250,7 +377,7 @@ struct PremiumInteractions {
                                         Circle()
                                             .fill(PremiumDesign.Colors.success)
                                             .frame(width: 24, height: 24)
-                                    }
+                                        }
                                     .offset(x: 8, y: -8)
                             }
                         }
