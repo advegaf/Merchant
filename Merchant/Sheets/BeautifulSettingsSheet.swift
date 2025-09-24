@@ -1,7 +1,4 @@
-// Rules: Beautiful settings page with premium design and comprehensive options
-// Inputs: User preferences, account settings, app configuration
-// Outputs: Elegant settings interface with smooth animations
-// Constraints: Intuitive organization, premium aesthetics, accessibility
+// Settings with profile header and organized sections for app preferences.
 
 import SwiftUI
 import UIKit

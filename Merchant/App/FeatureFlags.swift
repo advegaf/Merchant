@@ -1,7 +1,4 @@
-// Rules: App feature flags holder. No business rules here.
-// Inputs: Build configuration
-// Outputs: Flags used to gate features
-// Constraints: Keep simple; default development-on for PlaidSync
+// Feature flags used to toggle app behavior and experiments.
 
 import Foundation
 

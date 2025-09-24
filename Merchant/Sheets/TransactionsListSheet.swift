@@ -1,7 +1,4 @@
-// Rules: Beautiful transactions list matching app aesthetic with filtering and search
-// Inputs: TransactionStore, RecentActivityProvider
-// Outputs: Styled transaction list with rich data and search capabilities
-// Constraints: Modern UI, liquid glass effects, proper categorization
+// Transactions list with search, filters, and summary stats.
 
 import SwiftUI
 

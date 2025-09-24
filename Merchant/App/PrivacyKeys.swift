@@ -1,7 +1,3 @@
-// Rules: Utilities to check required Info.plist usage description keys.
-// Inputs: Info.plist
-// Outputs: Boolean presence flags
-// Constraints: Read-only helpers
 
 import Foundation
 

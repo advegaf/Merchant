@@ -1,7 +1,3 @@
-// Rules: Liquid glass floating tab bar with blur effects and smooth animations
-// Inputs: Tab selection state, navigation actions
-// Outputs: Floating tab bar with glass morphism effects
-// Constraints: iOS 26+ features, 60fps animations, accessibility support
 
 import SwiftUI
 

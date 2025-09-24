@@ -1,7 +1,4 @@
-// Rules: Authentication sheet with Sign in with Apple and email options
-// Inputs: UIState for sign-in control
-// Outputs: Sign-in UI with branded buttons, dismiss on auth
-// Constraints: UI only, toggles isSignedIn flag, no real authentication
+// Simple sign-in screen with Apple and email options.
 
 import SwiftUI
 

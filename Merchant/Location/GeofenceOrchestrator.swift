@@ -1,7 +1,4 @@
-// Rules: Build geofences around top nearby POIs and notify on entry.
-// Inputs: current coord; NearbyCategoryDetector/Provider; GeofenceManager; NotificationService
-// Outputs: Instant entry suggestions
-// Constraints: ≤10 regions; 150m radius; refresh periodically
+// Creates geofences for nearby places and schedules entry notifications.
 
 import Foundation
 import CoreLocation

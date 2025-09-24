@@ -1,7 +1,4 @@
-// Rules: Clean notification settings with category toggles and customization
-// Inputs: User preferences, notification categories
-// Outputs: Customizable notification settings interface
-// Constraints: Clear organization, instant feedback, accessibility support
+// Notification preferences with category toggles and timing options.
 
 import SwiftUI
 

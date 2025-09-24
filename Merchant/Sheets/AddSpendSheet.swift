@@ -1,7 +1,4 @@
-// Rules: Beautiful manual spend input matching app aesthetic with card selection
-// Inputs: merchant, amount, category, selected card
-// Outputs: Adds TransactionRecord to store with calculated rewards
-// Constraints: Modern UI, liquid glass effects, proper validation
+// Add a transaction with merchant, amount, category, and card used.
 
 import SwiftUI
 

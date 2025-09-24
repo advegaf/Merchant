@@ -1,7 +1,4 @@
-// Rules: One-shot nearby categories list using MapKit; no persistent location.
-// Inputs: User location, NearbyCategoriesProvider
-// Outputs: List with counts; tap to filter (future hook)
-// Constraints: Simple UI; no refactor
+// Nearby categories fetched once from your current location.
 
 import SwiftUI
 import CoreLocation

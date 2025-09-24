@@ -1,7 +1,4 @@
-// Rules: Comprehensive card reward system with categories and earnings calculation
-// Inputs: Card details, spending categories, transaction amounts
-// Outputs: Reward rates, earnings calculations, optimization recommendations
-// Constraints: Real-world accurate rates, dynamic bonus categories, caps
+// Reward categories, rates, and simple helpers for computing earnings.
 
 import Foundation
 

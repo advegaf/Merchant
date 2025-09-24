@@ -1,7 +1,3 @@
-// Rules: Geofence manager for near-instant entry alerts. Cap regions; power-safe.
-// Inputs: Coordinates to monitor
-// Outputs: didEnter callbacks
-// Constraints: Max 10 regions; 150m radius; Always respects auth
 
 import Foundation
 import CoreLocation

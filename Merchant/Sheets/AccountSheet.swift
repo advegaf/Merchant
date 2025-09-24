@@ -1,7 +1,4 @@
-// Rules: Modern account sheet with scrollable content and no sticky headers
-// Inputs: User profile, notification preferences, UI state
-// Outputs: Clean account interface matching app aesthetic
-// Constraints: No sticky headers, smooth scrolling, modern design
+// Account settings with profile, connectors, and notification preferences.
 
 import SwiftUI
 

@@ -1,7 +1,4 @@
-// Rules: Award-winning card stack with revolutionary physics and cinematic animations
-// Inputs: Array of CardUI with valid artURLs, focus index, gesture states
-// Outputs: Physics-based interactions, anticipatory animations, contextual haptics
-// Constraints: 60fps performance, iOS 26+, Apple Design Award quality
+// Interactive card stack with gestures and animations for browsing cards.
 
 import SwiftUI
 

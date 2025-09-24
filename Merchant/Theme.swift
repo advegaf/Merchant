@@ -1,7 +1,3 @@
-// Rules: Neon-on-dark theme tokens with Liquid Glass surfaces, iOS 26+ Materials, accessibility compliance
-// Inputs: Environment color scheme, accessibility preferences
-// Outputs: Color tokens, spacing, radii, shadows, glass components
-// Constraints: AA contrast compliance, Reduce Motion support, High Contrast fallbacks
 
 import SwiftUI
 

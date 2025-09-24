@@ -1,7 +1,3 @@
-// Rules: Minimal category→card recommendation with one-line rationale.
-// Inputs: Category string, selected cards
-// Outputs: Recommended CardUI and why-line
-// Constraints: Heuristic only
 
 import Foundation
 

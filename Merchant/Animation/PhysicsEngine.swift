@@ -1,7 +1,4 @@
-// Rules: Advanced physics simulation for award-winning animations
-// Inputs: Gesture states, velocity vectors, spring configurations
-// Outputs: Realistic motion with momentum, friction, and elasticity
-// Constraints: 60fps performance, iOS 26+ only, cinematic quality
+// Lightweight physics helpers for interactive motion and gestures.
 
 import SwiftUI
 import Combine

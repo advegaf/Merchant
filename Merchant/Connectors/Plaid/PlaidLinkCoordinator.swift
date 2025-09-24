@@ -1,7 +1,3 @@
-// Rules: Plaid Link coordinator. No secrets; redacted logs; sandbox-first.
-// Inputs: link_token from backend, presenting view controller context
-// Outputs: public_token on success, or cancellation
-// Constraints: Guard LinkKit at compile-time; no UI logic here
 
 import Foundation
 import SwiftUI

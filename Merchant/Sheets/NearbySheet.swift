@@ -1,7 +1,4 @@
-// Rules: Nearby locations with best card recommendations and interactive map
-// Inputs: User location, nearby venues, card portfolio
-// Outputs: Interactive venue list with card recommendations
-// Constraints: Clean layout, fast loading, clear recommendations
+// Nearby places with simple best-card recommendations and quick map links.
 
 import SwiftUI
 import MapKit

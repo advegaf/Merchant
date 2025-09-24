@@ -1,7 +1,4 @@
-// Rules: Mock provider returning cards with real card art URLs from official sources
-// Inputs: None (fixture data)
-// Outputs: CardUI array with validated artURLs from card issuer websites
-// Constraints: Only return cards with working https URLs, realistic product names
+// Mock provider that returns sample cards using official issuer art URLs.
 
 import Foundation
 

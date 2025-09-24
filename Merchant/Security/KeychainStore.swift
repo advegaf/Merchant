@@ -1,7 +1,3 @@
-// Rules: Keychain storage for short-lived tokens. Redact logs. Easy delete/export later.
-// Inputs: Keys and string values
-// Outputs: Persisted values in Keychain
-// Constraints: No sensitive logging; handle errors via throws
 
 import Foundation
 import Security

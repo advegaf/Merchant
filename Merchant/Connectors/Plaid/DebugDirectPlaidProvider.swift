@@ -1,7 +1,3 @@
-// Rules: DEBUG-only provider to create link_token directly with Plaid for personal dev.
-// Inputs: Info.plist keys PLAID_CLIENT_ID, PLAID_SECRET, PLAID_ENV (sandbox/development)
-// Outputs: link_token and public_token exchange (NO storing access_token)
-// Constraints: Compiles only in DEBUG; do not ship to production.
 
 import Foundation
 

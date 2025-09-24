@@ -1,7 +1,3 @@
-// Rules: Mock Plaid connection sheet with loading state, success flow to ReviewCardsSheet
-// Inputs: UIState for sheet management, MockCardArtProvider for cards
-// Outputs: Mock connection UI, populates cardsToReview, triggers review sheet
-// Constraints: UI only mock, realistic loading time, success leads to card review
 
 import SwiftUI
 

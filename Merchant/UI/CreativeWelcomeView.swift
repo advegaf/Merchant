@@ -1,7 +1,3 @@
-// Rules: Creative welcome screen with stunning animations and premium design
-// Inputs: User onboarding state, card selection
-// Outputs: Beautiful welcome experience with smooth transitions
-// Constraints: Premium animations, engaging visuals, liquid glass effects
 
 import SwiftUI
 

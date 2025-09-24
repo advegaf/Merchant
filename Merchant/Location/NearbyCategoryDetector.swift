@@ -1,7 +1,3 @@
-// Rules: Simple detector to identify venue category (e.g., restaurant) using MKLocalSearch.
-// Inputs: CLVisit with coordinates
-// Outputs: PurchaseCategory classification
-// Constraints: Rate-limit searches; low-power; degrade when offline
 
 import Foundation
 import CoreLocation

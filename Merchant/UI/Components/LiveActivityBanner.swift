@@ -1,7 +1,3 @@
-// Rules: Live Activity banner showing current location and best card recommendation
-// Inputs: Current venue, best card recommendation, Open Wallet action
-// Outputs: Prominent banner with location-based card suggestion
-// Constraints: Clean design, quick access to wallet, smooth animations
 
 import SwiftUI
 

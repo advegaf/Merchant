@@ -1,7 +1,4 @@
-// Rules: Detailed breakdown of optimization score with explanations
-// Inputs: User's card usage patterns, optimization calculations
-// Outputs: Clear explanation of optimization score and improvements
-// Constraints: Easy to understand, actionable insights, clean design
+// Explains how the optimization score is calculated and how to improve it.
 
 import SwiftUI
 

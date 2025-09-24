@@ -1,7 +1,3 @@
-// Rules: Find nearby venues via Apple Maps and bucket by key categories.
-// Inputs: Current coordinate
-// Outputs: Array of (name, category, distanceMeters)
-// Constraints: Low-power, cap results, fast response
 
 import Foundation
 import CoreLocation

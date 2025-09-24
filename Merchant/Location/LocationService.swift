@@ -1,7 +1,3 @@
-// Rules: Core Location wrapper using Visits for low power; degrades gracefully.
-// Inputs: CLLocationManager authorization/visits
-// Outputs: Visit callbacks for orchestrators
-// Constraints: Cap features; no heavy timers; background-safe when permitted
 
 import Foundation
 import CoreLocation

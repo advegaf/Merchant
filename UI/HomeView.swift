@@ -1,7 +1,3 @@
-// Rules: Main home screen with blur gating for unauthenticated users, card stack when signed in
-// Inputs: UIState authentication status, card data
-// Outputs: Blurred content + auth overlay OR full home with cards and panels
-// Constraints: Blur entire content when not signed in, CTA for Plaid connection
 
 import SwiftUI
 

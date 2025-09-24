@@ -1,7 +1,3 @@
-// Rules: Local notifications only; time-sensitive suggestions; per-venue rate limits; audit log.
-// Inputs: Venue category and suggestion payload
-// Outputs: Local notification
-// Constraints: Respect user permissions; store minimal audit metadata only
 
 import Foundation
 import UserNotifications

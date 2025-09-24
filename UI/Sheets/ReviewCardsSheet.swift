@@ -1,7 +1,3 @@
-// Rules: Sheet for reviewing detected cards with art thumbnails, toggle selection, confirm flow
-// Inputs: UIState with cardsToReview array from MockCardArtProvider
-// Outputs: Selected cards list, confirmation action to add to wallet
-// Constraints: Only show cards with valid artURL, pre-check toggles, handle empty state
 
 import SwiftUI
 

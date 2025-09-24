@@ -1,7 +1,3 @@
-// Rules: Live Activity showing current location and best card recommendation
-// Inputs: Current location, venue category, best card recommendation
-// Outputs: Dynamic Island and Lock Screen Live Activity with Open Wallet action
-// Constraints: iOS 26+ ActivityKit, clean design, quick access to wallet
 
 // Build-gated Live Activity + Widget definitions
 #if canImport(ActivityKit)

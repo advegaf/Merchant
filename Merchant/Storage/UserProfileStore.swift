@@ -1,4 +1,3 @@
-// Rules: Store lightweight user profile (display name and profile image).
 
 import Foundation
 import SwiftUI

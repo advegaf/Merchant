@@ -1,7 +1,3 @@
-// Rules: Clean premium card tile without chips or expiration dates, Copilot-inspired design
-// Inputs: CardUI with artURL, focus state, swipe gestures
-// Outputs: Minimal card display with brand focus, swipe-up navigation
-// Constraints: No personal details, clean aesthetic, official art only
 
 import SwiftUI
 

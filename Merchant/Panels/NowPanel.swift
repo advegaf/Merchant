@@ -1,7 +1,3 @@
-// Rules: Glass tile showing current location suggestion with best card and reason
-// Inputs: Mock location context, best card recommendation
-// Outputs: Compact suggestion panel with sparkles accent, tap interaction
-// Constraints: Single line reason, amber sparkles glyph, glass background
 
 import SwiftUI
 

@@ -1,7 +1,3 @@
-// Rules: Premium design system inspired by Copilot's sophisticated visual hierarchy
-// Inputs: Environment conditions, user interactions, data states
-// Outputs: Premium visual components with advanced materials and animations
-// Constraints: Performance-first, accessibility-compliant, iOS 26+ features
 
 import SwiftUI
 

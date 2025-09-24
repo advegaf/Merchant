@@ -1,7 +1,3 @@
-// Rules: Persist selected card choices locally; simple, testable, auditable keys.
-// Inputs: Card selection keys (institution|productName)
-// Outputs: Stored selection and onboarding completion flag
-// Constraints: UserDefaults only; no sensitive data
 
 import Foundation
 import SwiftUI

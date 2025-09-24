@@ -1,7 +1,3 @@
-// Rules: Manage Live Activity lifecycle based on location and venue detection
-// Inputs: Location visits, venue detection, card recommendations
-// Outputs: Live Activity start/stop/update based on context
-// Constraints: Respect user preferences, battery efficiency, privacy
 
 // Build-gated manager to avoid compile errors on platforms without ActivityKit
 #if canImport(ActivityKit)

@@ -1,7 +1,3 @@
-// Rules: Copilot and Robinhood-inspired design system with premium animations
-// Inputs: User interactions, state changes, data updates
-// Outputs: Sophisticated UI patterns matching fintech leaders
-// Constraints: 60fps performance, iOS 26+ features, award-level polish
 
 import SwiftUI
 

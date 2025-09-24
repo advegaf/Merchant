@@ -1,6 +1,3 @@
-// Rules: Persist notification category toggles and master switch.
-// Inputs: User changes in settings
-// Outputs: In-memory state + UserDefaults persistence
 
 import Foundation
 import SwiftUI

@@ -1,7 +1,4 @@
-// Rules: Premium card stack with swipe-up navigation, Robinhood-inspired animations
-// Inputs: Array of CardUI, swipe gestures, tap interactions
-// Outputs: Smooth card transitions, haptic feedback, fluid navigation
-// Constraints: 60fps performance, iOS 26+ features, Copilot-level polish
+// Stack of cards with smooth transitions and tap-driven navigation.
 
 import SwiftUI
 

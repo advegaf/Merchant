@@ -1,7 +1,4 @@
-// Rules: Onboarding card picker to choose preferred cards. No network.
-// Inputs: MockCardArtProvider cards, SelectedCardsStore
-// Outputs: User selections persisted; benefits view inline
-// Constraints: Keep UI simple; thumbnails only; no layout refactor
+// Pick your cards for recommendations during onboarding.
 
 import SwiftUI
 

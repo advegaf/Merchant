@@ -1,7 +1,3 @@
-// Rules: Beautiful welcome screen with card selection flow and Apple-precise styling
-// Inputs: User name, card selection, onboarding flow
-// Outputs: Smooth onboarding experience with card thumbnails
-// Constraints: Follow Apple HIG, smooth animations, premium feel
 
 import SwiftUI
 

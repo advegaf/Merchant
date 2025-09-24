@@ -1,7 +1,3 @@
-// Rules: Recent activity data model with realistic transaction data
-// Inputs: Transaction history, card usage data
-// Outputs: Formatted activity entries with earnings calculations
-// Constraints: Realistic merchant names, accurate point calculations
 
 import Foundation
 import Combine

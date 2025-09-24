@@ -1,7 +1,4 @@
-// Rules: Plaid Link entry sheet with consent, starts coordinator when ready
-// Inputs: UIState for presentation, PlaidLinkViewModel for actions
-// Outputs: Launch Plaid Link, errors surfaced locally, dismiss on success
-// Constraints: No secrets; tokens via backend; short-lived access tokens in Keychain
+// Connect your bank via Plaid to import transactions.
 
 import SwiftUI
 

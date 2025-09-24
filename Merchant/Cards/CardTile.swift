@@ -1,7 +1,4 @@
-// Rules: Premium card tile showcasing official issuer art, Max Rewards style
-// Inputs: CardUI with official artURL, focus state, z-index, matched geometry namespace
-// Outputs: High-quality card display with official art, elegant overlays
-// Constraints: Official art only, sophisticated visual hierarchy, award-level polish
+// Visual card tile that renders official card art with minimal overlays.
 
 import SwiftUI
 

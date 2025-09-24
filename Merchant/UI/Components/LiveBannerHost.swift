@@ -1,6 +1,3 @@
-// Rules: Host for LiveActivityBanner; resolves current place and best card.
-// Inputs: CurrentPlaceProvider, SelectedCardsStore
-// Outputs: LiveActivityBanner with Wallet button
 
 import SwiftUI
 import Foundation

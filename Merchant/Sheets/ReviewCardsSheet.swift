@@ -1,7 +1,4 @@
-// Rules: Placeholder sheet for future card review functionality
-// Inputs: UIState for dismissal
-// Outputs: Dismissal action
-// Constraints: Simplified version without Plaid integration
+// Placeholder screen for upcoming card review features.
 
 import SwiftUI
 

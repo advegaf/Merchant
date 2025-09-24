@@ -1,7 +1,4 @@
-// Rules: Registry of officially verified card art URLs; exact-match lookup only. Never suggest non-exact or third-party art.
-// Inputs: Institution identifier and exact productName
-// Outputs: Official https URL for card art if and only if there is an exact match
-// Constraints: Whitelist issuer hosts; do not return approximations; no network here
+// Registry of official card art URLs by issuer and product; exact matches only.
 
 import Foundation
 

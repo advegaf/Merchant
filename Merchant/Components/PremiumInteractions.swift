@@ -1,7 +1,4 @@
-// Rules: Premium interactive components with advanced micro-interactions
-// Inputs: User gestures, state changes, data updates
-// Outputs: Sophisticated animations, haptic feedback, visual transitions
-// Constraints: 60fps performance, accessibility support, premium feel
+// Interactive UI components with smooth animations and haptic feedback.
 
 import SwiftUI
 import UIKit

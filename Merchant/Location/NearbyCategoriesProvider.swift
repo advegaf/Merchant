@@ -1,7 +1,3 @@
-// Rules: Provide nearby POI category buckets via one-shot MapKit searches.
-// Inputs: Current coordinate
-// Outputs: Sorted category buckets with counts
-// Constraints: Low power; graceful failure when location off
 
 import Foundation
 import MapKit

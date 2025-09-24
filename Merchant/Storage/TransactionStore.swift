@@ -1,7 +1,4 @@
-// Rules: Simple persisted transaction store. No sensitive data.
-// Inputs: User-entered spends
-// Outputs: Stored records and change notifications
-// Constraints: UserDefaults JSON; minimal schema
+// Simple transaction store backed by UserDefaults (JSON-encoded records).
 
 import Foundation
 

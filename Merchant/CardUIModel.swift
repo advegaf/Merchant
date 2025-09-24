@@ -1,7 +1,3 @@
-// Rules: UI contract for card representation, requires valid artURL for rendering
-// Inputs: Card data from connectors/providers
-// Outputs: Identifiable card model with required art asset
-// Constraints: artURL must be valid URL, no placeholders allowed
 
 import Foundation
 

@@ -1,7 +1,3 @@
-// Rules: Clean, professional welcome flow with consistent design
-// Inputs: User onboarding state, card selection
-// Outputs: Smooth welcome experience with card selection
-// Constraints: Clean animations, proper hierarchy, professional feel
 
 import SwiftUI
 

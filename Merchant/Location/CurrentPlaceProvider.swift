@@ -1,7 +1,4 @@
-// Rules: Provide current place name and session start tracking with low power.
-// Inputs: Core Location updates, reverse geocoding
-// Outputs: Place name and session start date via callback
-// Constraints: Use coarse accuracy; reset session when moving >75m
+// Resolves a nearby place name and reports when a new session starts.
 
 import Foundation
 import CoreLocation

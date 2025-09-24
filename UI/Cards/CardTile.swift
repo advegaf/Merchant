@@ -1,7 +1,3 @@
-// Rules: Individual card tile with AsyncImage art loading, premium styling, network badge
-// Inputs: CardUI with artURL, focus state, z-index, matched geometry namespace
-// Outputs: Rendered card with official art, fallback on load failure
-// Constraints: Remove from view if art fails, premium gold accent for premium cards
 
 import SwiftUI
 

@@ -1,7 +1,3 @@
-// Rules: Cinematic quality animations with advanced timing and easing
-// Inputs: Animation triggers, state changes, user interactions
-// Outputs: Award-winning motion design with perfect timing
-// Constraints: 60fps, iOS 26+, accessibility compliance
 
 import SwiftUI
 

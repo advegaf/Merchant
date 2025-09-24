@@ -1,7 +1,3 @@
-// Rules: App entry point with dark mode preference and UIState environment
-// Inputs: System launch
-// Outputs: Root UI hierarchy with theme and state injection
-// Constraints: iOS 26+ only, dark mode default
 
 import SwiftUI
 import CoreLocation

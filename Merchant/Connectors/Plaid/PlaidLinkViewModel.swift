@@ -1,7 +1,3 @@
-// Rules: ViewModel orchestrating Plaid Link flow. No secrets here.
-// Inputs: Link token provider, Plaid coordinator
-// Outputs: Begin flow, report errors
-// Constraints: Use async/await; short-lived tokens in Keychain via KeychainStore
 
 import Foundation
 

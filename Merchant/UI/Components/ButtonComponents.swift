@@ -1,7 +1,3 @@
-// Rules: Reusable button components with Apple-precise styling and function placeholders
-// Inputs: Button configuration, action handlers
-// Outputs: Consistent button UI with customizable functions
-// Constraints: Follow Apple HIG, beautiful rounded corners, premium feel
 
 import SwiftUI
 

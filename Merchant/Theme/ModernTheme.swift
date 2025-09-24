@@ -1,7 +1,3 @@
-// Rules: Modern, sophisticated color system for premium fintech experience
-// Inputs: App context, user preferences, environmental conditions
-// Outputs: Contextual color tokens with semantic meaning
-// Constraints: WCAG AAA compliance, supports all accessibility modes
 
 import SwiftUI
 

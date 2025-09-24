@@ -1,7 +1,3 @@
-// Rules: Advanced data visualization components inspired by Copilot's chart design
-// Inputs: Financial data, time series, categorical spending data
-// Outputs: Interactive charts with smooth animations and premium styling
-// Constraints: 60fps performance, accessibility-compliant, gesture-driven
 
 import SwiftUI
 import Charts

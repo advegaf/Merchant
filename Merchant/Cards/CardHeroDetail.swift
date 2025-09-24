@@ -1,7 +1,3 @@
-// Rules: Full-screen card detail with matched geometry hero transition, scrollable content
-// Inputs: CardUI, namespace for animation, dismiss closure
-// Outputs: Hero card view with product details, rewards info, close gesture
-// Constraints: Spring animation 0.45s response, backdrop dismiss, thumb swipe support
 
 import SwiftUI
 

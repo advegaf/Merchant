@@ -1,7 +1,4 @@
-// Rules: Static benefits reference for popular cards (concise, high-signal).
-// Inputs: Card selection key
-// Outputs: Short benefits description for UI
-// Constraints: Approximate; label estimated where issuer sync isn’t live
+// Static reference for card benefits and short UI descriptions.
 
 import Foundation
 

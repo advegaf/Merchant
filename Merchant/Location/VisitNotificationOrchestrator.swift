@@ -1,7 +1,3 @@
-// Rules: Orchestrate location visits → category detection → local notification suggestion.
-// Inputs: LocationServicing visits
-// Outputs: Local notifications with clear reasons
-// Constraints: Respect privacy toggles; feature flag gate; degrade gracefully when disabled
 
 import Foundation
 import CoreLocation

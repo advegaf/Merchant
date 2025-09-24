@@ -1,7 +1,3 @@
-// Rules: Backend-driven Link token flow; never store Plaid secrets in app.
-// Inputs: Server base URL via Info.plist key PLAID_SERVER_BASE_URL
-// Outputs: link_token fetch and public_token exchange
-// Constraints: Use async/await; redact errors; TLS only
 
 import Foundation
 

@@ -1,7 +1,3 @@
-// Rules: Wallet-style card stack with physics interactions, tap expand, swipe reorder
-// Inputs: Array of CardUI with valid artURLs, focus index
-// Outputs: Interactive stack with depth, tilt, haptics on interactions
-// Constraints: 60fps scrolling, Reduce Motion compliance, only render cards with artURL
 
 import SwiftUI
 

@@ -1,7 +1,4 @@
-// Rules: Clean, professional home screen with consistent design system
-// Inputs: UIState authentication status, card data, user profile
-// Outputs: Polished dashboard with proper hierarchy and spacing
-// Constraints: Clean animations, consistent spacing, professional feel
+// Home screen showing the dashboard, your cards, and quick actions.
 
 import SwiftUI
 
