@@ -1,6 +1,8 @@
 # Merchant
 
-**Context:** Credit Cards offer a diverse variety of benefits
+## Context 
+
+Credit Cards offer a diverse variety of benefits
 
 ## Problem
 
